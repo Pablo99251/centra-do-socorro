@@ -17,13 +17,12 @@
         .num-pedido { position: absolute; right: 20px; top: 20px; background: var(--amarelo); color: #000; font-weight: 900; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem; }
         
         .timer-container { color: var(--vermelho); font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-        .status-auto { background: var(--laranja); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; display: none; }
+        .status-auto-label { background: var(--laranja); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; display: none; }
         .urgente { animation: piscar 0.5s infinite; }
         @keyframes piscar { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; }
         .info-item { font-size: 0.9rem; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .data-hora { color: #888; font-size: 0.8rem; margin-top: 5px; }
         
         .botoes-direcionar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
         
@@ -41,6 +40,7 @@
         
         input { width: 100%; padding: 12px; margin-bottom: 10px; background: #000; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
         b { color: var(--amarelo); }
+        .data-registro { font-size: 0.8rem; color: #888; margin-top: 10px; font-style: italic; }
     </style>
 </head>
 <body>
@@ -85,48 +85,43 @@
         function marcarComoEnviado(btn) {
             btn.classList.remove('btn-automatico');
             btn.classList.add('btn-clicado');
-            btn.innerHTML = "✓ DIRECIONADO MANUAL";
+            btn.innerHTML = "✓ DIRECIONADO";
         }
 
         function iniciarTimer(id, elementoTimer, card, linkZap) {
-            let tempoGeral = 40 * 60; 
-            let tempoAuto = 10 * 60; // 10 Minutos para disparo automático
+            let tempo = 40 * 60; 
             let enviadoAuto = false;
 
             let intervalo = setInterval(() => {
-                // Timer de 40 min decrescente
-                let min = Math.floor(tempoGeral / 60);
-                let seg = tempoGeral % 60;
-                elementoTimer.innerHTML = `⏳ LIMITE: ${min}:${seg < 10 ? '0' : ''}${seg} <span id="auto-status-${id}" class="status-auto">ATIVADO AUTOMÁTICO</span>`;
+                let minutos = Math.floor(tempo / 60);
+                let segundos = tempo % 60;
+                elementoTimer.innerHTML = `⏳ LIMITE: ${minutos}:${segundos < 10 ? '0' : ''}${segundos} <span id="auto-status-${id}" class="status-auto-label">ENVIADO AUTOMATICAMENTE</span>`;
                 
-                // Lógica de 10 minutos (Se passaram 10 min, tempoGeral fica em 30 min)
-                if (tempoGeral <= 30 * 60 && !enviadoAuto) {
+                // DISPARO AUTOMÁTICO EM 10 MINUTOS (Restando 30:00)
+                if (tempo === 30 * 60 && !enviadoAuto) {
                     enviadoAuto = true;
                     document.getElementById(`auto-status-${id}`).style.display = "inline";
                     
-                    // Muda o botão para Laranja
-                    const btns = card.querySelectorAll('.btn-zap');
-                    btns.forEach(b => {
+                    const botoes = card.querySelectorAll('.btn-zap');
+                    botoes.forEach(b => {
                         if(!b.classList.contains('btn-clicado')) {
                             b.classList.add('btn-automatico');
-                            b.innerHTML = "⚡ ENVIADO AUTOMÁTICO";
+                            b.innerHTML = "⚡ ENVIO AUTOMÁTICO";
                         }
                     });
-
-                    // Disparo Automático (abre o zap do primeiro da lista)
                     window.open(linkZap, '_blank');
                 }
 
-                if (tempoGeral <= 5 * 60) {
+                if (tempo <= 5 * 60) {
                     card.style.borderColor = "var(--vermelho)";
                     elementoTimer.classList.add('urgente');
                 }
 
-                if (tempoGeral <= 0) {
+                if (tempo <= 0) {
                     clearInterval(intervalo);
                     elementoTimer.innerText = "❌ TEMPO EXCEDIDO!";
                 }
-                tempoGeral--;
+                tempo--;
             }, 1000);
         }
 
@@ -139,24 +134,24 @@
             totalPedidosGeral++;
             localStorage.setItem('vampirao_total', totalPedidosGeral);
 
-            // Som de Notificação
             new Audio('https://www.myinstants.com/media/sounds/whatsapp-notification.mp3').play();
 
             const agora = new Date();
-            const dataFormatada = agora.toLocaleDateString('pt-BR') + " às " + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            const dataHoraTexto = agora.toLocaleDateString('pt-BR') + " às " + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
 
             const item = document.createElement('div');
             item.className = 'card-pedido';
             item.id = `pedido-${totalPedidosGeral}`;
             
-            let msgZap = `🔋 *PEDIDO DE BATERIA* - CENTRAL DO SOCORRO 🚨\n\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📍 *ENDEREÇO:* ${p.end}\n🚗 *VEÍCULO:* ${p.veic}\n⚡ *AMPERAGEM:* ${p.amp}\n\n⏱️ *HORA DO PEDIDO:* ${dataFormatada}`;
+            // MENSAGEM ORIGINAL QUE VOCÊ MANDOU
+            let msgZap = `🔋 *PEDIDO DE BATERIA* - CENTRAL DO SOCORRO 🚨\n\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📧 *E-MAIL:* ${p.email || 'Não informado'}\n📍 *ENDEREÇO:* ${p.end}\n🛠️ *SERVIÇO:* ${p.tipo_servico || 'Troca de Bateria'}\n🚗 *VEÍCULO:* ${p.veic} (${p.ano})\n⚡ *AMPERAGEM:* ${p.amp}\n\n⏱️ *PREVISÃO:* 40 MINUTOS.\n\n*MANDAR O ORÇAMENTO PARA O CLIENTE O MAIS BREVE POSSÍVEL*`;
 
             let botoesHtml = '';
             let primeiroLink = "";
-            configAtendentes.forEach((c, index) => {
+            configAtendentes.forEach((c, idx) => {
                 if(c.numero) {
                     let link = `https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}`;
-                    if(index === 0) primeiroLink = link;
+                    if(idx === 0) primeiroLink = link;
                     botoesHtml += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="${link}" target="_blank">ENVIAR PARA ${c.nome}</a>`;
                 }
             });
@@ -168,11 +163,13 @@
                 <div class="info-grid">
                     <div class="info-item"><b>CLIENTE:</b> ${p.nome}</div>
                     <div class="info-item"><b>TEL:</b> ${p.tel}</div>
-                    <div class="info-item"><b>VEÍCULO:</b> ${p.veic}</div>
+                    <div class="info-item"><b>E-MAIL:</b> ${p.email || 'N/A'}</div>
+                    <div class="info-item"><b>SERVIÇO:</b> ${p.tipo_servico || 'Troca'}</div>
                     <div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div>
+                    <div class="info-item"><b>VEÍCULO:</b> ${p.veic} | ${p.ano}</div>
                     <div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>
                 </div>
-                <div class="data-hora">📅 Recebido em: ${dataFormatada}</div>
+                <div class="data-registro">🕒 Recebido em: ${dataHoraTexto}</div>
                 <div class="botoes-direcionar">${botoesHtml}</div>
             `;
             
