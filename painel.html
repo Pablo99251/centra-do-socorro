@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>CENTRAL DO SOCORRO - PAINEL ADM</title>
     <style>
-        :root { --amarelo: #ffcc00; --preto: #000; --cinza: #1a1a1a; --verde: #25d366; --azul: #007bff; --vermelho: #ff4444; }
+        :root { --amarelo: #ffcc00; --preto: #000; --cinza: #1a1a1a; --verde: #25d366; --azul: #007bff; --vermelho: #ff4444; --laranja: #ff8800; }
         body { background: var(--preto); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
         
         .header-painel { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
@@ -16,16 +16,17 @@
         .card-pedido { background: var(--cinza); border: 2px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 20px; border-left: 10px solid var(--amarelo); position: relative; }
         .num-pedido { position: absolute; right: 20px; top: 20px; background: var(--amarelo); color: #000; font-weight: 900; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem; }
         
-        .timer-container { color: var(--vermelho); font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .timer-container { color: var(--vermelho); font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .status-auto { background: var(--laranja); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; display: none; }
         .urgente { animation: piscar 0.5s infinite; }
         @keyframes piscar { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; }
         .info-item { font-size: 0.9rem; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .data-hora { color: #888; font-size: 0.8rem; margin-top: 5px; }
         
         .botoes-direcionar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
         
-        /* Botão do Zap Ajustado */
         .btn-zap { 
             background: var(--verde); color: #fff; padding: 12px; text-decoration: none; 
             border-radius: 8px; font-weight: bold; font-size: 0.85rem; flex-grow: 1; 
@@ -33,6 +34,7 @@
             align-items: center; justify-content: center; gap: 8px;
         }
         .btn-clicado { background: var(--azul) !important; }
+        .btn-automatico { background: var(--laranja) !important; }
 
         #modalConfig { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 30px; border-radius: 15px; border: 2px solid var(--amarelo); z-index: 100; width: 90%; max-width: 500px; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 90; }
@@ -81,34 +83,52 @@
         function salvarConfig() { localStorage.setItem('vampirao_contatos', JSON.stringify(configAtendentes)); fecharModais(); }
 
         function marcarComoEnviado(btn) {
+            btn.classList.remove('btn-automatico');
             btn.classList.add('btn-clicado');
-            // Remove o ícone e deixa só o texto ao clicar
-            btn.innerHTML = "✓ DIRECIONADO";
+            btn.innerHTML = "✓ DIRECIONADO MANUAL";
         }
 
-        function iniciarTimer(id, elementoTimer, card) {
-            let tempo = 40 * 60; 
+        function iniciarTimer(id, elementoTimer, card, linkZap) {
+            let tempoGeral = 40 * 60; 
+            let tempoAuto = 10 * 60; // 10 Minutos para disparo automático
+            let enviadoAuto = false;
+
             let intervalo = setInterval(() => {
-                let minutos = Math.floor(tempo / 60);
-                let segundos = tempo % 60;
-                elementoTimer.innerText = `⏳ LIMITE: ${minutos}:${segundos < 10 ? '0' : ''}${segundos}`;
+                // Timer de 40 min decrescente
+                let min = Math.floor(tempoGeral / 60);
+                let seg = tempoGeral % 60;
+                elementoTimer.innerHTML = `⏳ LIMITE: ${min}:${seg < 10 ? '0' : ''}${seg} <span id="auto-status-${id}" class="status-auto">ATIVADO AUTOMÁTICO</span>`;
                 
-                if (tempo === 30 * 60) {
-                    card.style.borderColor = "var(--vermelho)";
-                    elementoTimer.classList.add('urgente');
-                    elementoTimer.innerText = "🚨 ENVIO IMEDIATO (10 MIN PASSADOS!)";
+                // Lógica de 10 minutos (Se passaram 10 min, tempoGeral fica em 30 min)
+                if (tempoGeral <= 30 * 60 && !enviadoAuto) {
+                    enviadoAuto = true;
+                    document.getElementById(`auto-status-${id}`).style.display = "inline";
+                    
+                    // Muda o botão para Laranja
+                    const btns = card.querySelectorAll('.btn-zap');
+                    btns.forEach(b => {
+                        if(!b.classList.contains('btn-clicado')) {
+                            b.classList.add('btn-automatico');
+                            b.innerHTML = "⚡ ENVIADO AUTOMÁTICO";
+                        }
+                    });
+
+                    // Disparo Automático (abre o zap do primeiro da lista)
+                    window.open(linkZap, '_blank');
                 }
 
-                if (tempo <= 0) {
+                if (tempoGeral <= 5 * 60) {
+                    card.style.borderColor = "var(--vermelho)";
+                    elementoTimer.classList.add('urgente');
+                }
+
+                if (tempoGeral <= 0) {
                     clearInterval(intervalo);
                     elementoTimer.innerText = "❌ TEMPO EXCEDIDO!";
                 }
-                tempo--;
+                tempoGeral--;
             }, 1000);
         }
-
-        // Ícone do WhatsApp em SVG (Código puro, não quebra)
-        const iconeZap = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12.031 6.172c-2.277 0-4.124 1.848-4.124 4.125 0 .762.207 1.474.568 2.088l-.604 2.206 2.257-.592a4.113 4.113 0 001.903.468c2.277 0 4.125-1.848 4.125-4.125 0-2.277-1.848-4.125-4.125-4.125m3.111 5.86c-.128.36-.641.688-1.045.733-.274.03-.632.045-1.018-.08a5.16 5.16 0 01-2.022-1.21 4.56 4.56 0 01-1.025-1.636c-.17-.43-.178-.775-.02-1.008.134-.197.31-.26.415-.316l.27-.14c.1-.053.203-.094.302-.016.104.084.352.857.382.918.03.06.052.13.015.204a.42.42 0 01-.16.185c-.057.045-.116.104-.173.153-.058.05-.12.106-.052.223.067.117.3.495.642.8.44.393.81.515.924.57.114.053.18.043.247-.033.068-.076.29-.336.368-.452.076-.115.152-.097.257-.058.106.04.673.318.788.376.115.058.19.086.218.134.027.047.027.275-.1.635zM12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.957-1.302C8.36 21.562 10.1 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.724 0-3.32-.475-4.688-1.295l-.337-.203-2.887.758.772-2.82-.224-.356A7.957 7.957 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"></path></svg>`;
 
         const source = new EventSource('https://ntfy.sh/central_socorro_vampirao_ios/sse');
         source.onmessage = (e) => {
@@ -119,18 +139,25 @@
             totalPedidosGeral++;
             localStorage.setItem('vampirao_total', totalPedidosGeral);
 
+            // Som de Notificação
             new Audio('https://www.myinstants.com/media/sounds/whatsapp-notification.mp3').play();
+
+            const agora = new Date();
+            const dataFormatada = agora.toLocaleDateString('pt-BR') + " às " + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
 
             const item = document.createElement('div');
             item.className = 'card-pedido';
             item.id = `pedido-${totalPedidosGeral}`;
             
-            let msgZap = `🔋 *PEDIDO DE BATERIA* - CENTRAL DO SOCORRO 🚨\n\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📧 *E-MAIL:* ${p.email || 'Não informado'}\n📍 *ENDEREÇO:* ${p.end}\n🛠️ *SERVIÇO:* ${p.tipo_servico || 'Troca de Bateria'}\n🚗 *VEÍCULO:* ${p.veic} (${p.ano})\n⚡ *AMPERAGEM:* ${p.amp}\n\n⏱️ *PREVISÃO:* 40 MINUTOS.\n\n*MANDAR O ORÇAMENTO PARA O CLIENTE O MAIS BREVE POSSÍVEL*`;
+            let msgZap = `🔋 *PEDIDO DE BATERIA* - CENTRAL DO SOCORRO 🚨\n\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📍 *ENDEREÇO:* ${p.end}\n🚗 *VEÍCULO:* ${p.veic}\n⚡ *AMPERAGEM:* ${p.amp}\n\n⏱️ *HORA DO PEDIDO:* ${dataFormatada}`;
 
             let botoesHtml = '';
-            configAtendentes.forEach(c => {
+            let primeiroLink = "";
+            configAtendentes.forEach((c, index) => {
                 if(c.numero) {
-                    botoesHtml += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}" target="_blank">${iconeZap} ENVIAR PARA ${c.nome}</a>`;
+                    let link = `https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}`;
+                    if(index === 0) primeiroLink = link;
+                    botoesHtml += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="${link}" target="_blank">ENVIAR PARA ${c.nome}</a>`;
                 }
             });
 
@@ -141,11 +168,11 @@
                 <div class="info-grid">
                     <div class="info-item"><b>CLIENTE:</b> ${p.nome}</div>
                     <div class="info-item"><b>TEL:</b> ${p.tel}</div>
-                    <div class="info-item"><b>SERVIÇO:</b> ${p.tipo_servico || 'Troca'}</div>
+                    <div class="info-item"><b>VEÍCULO:</b> ${p.veic}</div>
                     <div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div>
-                    <div class="info-item"><b>VEÍCULO:</b> ${p.veic} | ${p.ano}</div>
                     <div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>
                 </div>
+                <div class="data-hora">📅 Recebido em: ${dataFormatada}</div>
                 <div class="botoes-direcionar">${botoesHtml}</div>
             `;
             
@@ -153,7 +180,7 @@
             if(lista.innerHTML.includes("Aguardando")) lista.innerHTML = "";
             lista.prepend(item);
 
-            iniciarTimer(totalPedidosGeral, document.getElementById(`timer-${totalPedidosGeral}`), item);
+            iniciarTimer(totalPedidosGeral, document.getElementById(`timer-${totalPedidosGeral}`), item, primeiroLink);
         };
     </script>
 </body>
