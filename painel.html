@@ -97,7 +97,6 @@
                 let segundos = tempo % 60;
                 elementoTimer.innerHTML = `⏳ LIMITE: ${minutos}:${segundos < 10 ? '0' : ''}${segundos} <span id="auto-status-${id}" class="status-auto-label">ENVIADO AUTOMATICAMENTE</span>`;
                 
-                // DISPARO AUTOMÁTICO EM 10 MINUTOS (Restando 30:00)
                 if (tempo === 30 * 60 && !enviadoAuto) {
                     enviadoAuto = true;
                     document.getElementById(`auto-status-${id}`).style.display = "inline";
@@ -138,13 +137,16 @@
 
             const agora = new Date();
             const dataHoraTexto = agora.toLocaleDateString('pt-BR') + " às " + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            
+            // CORREÇÃO DO ANO (Tenta pegar de vários campos possíveis)
+            const anoVeiculo = p.ano || p.ano_veic || 'Não informado';
 
             const item = document.createElement('div');
             item.className = 'card-pedido';
             item.id = `pedido-${totalPedidosGeral}`;
             
-            // MENSAGEM ORIGINAL QUE VOCÊ MANDOU
-            let msgZap = `🔋 *PEDIDO DE BATERIA* - CENTRAL DO SOCORRO 🚨\n\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📧 *E-MAIL:* ${p.email || 'Não informado'}\n📍 *ENDEREÇO:* ${p.end}\n🛠️ *SERVIÇO:* ${p.tipo_servico || 'Troca de Bateria'}\n🚗 *VEÍCULO:* ${p.veic} (${p.ano})\n⚡ *AMPERAGEM:* ${p.amp}\n\n⏱️ *PREVISÃO:* 40 MINUTOS.\n\n*MANDAR O ORÇAMENTO PARA O CLIENTE O MAIS BREVE POSSÍVEL*`;
+            // MENSAGEM COM HORÁRIO DO PEDIDO NO WHATSAPP
+            let msgZap = `🔋 *PEDIDO DE BATERIA* - CENTRAL DO SOCORRO 🚨\n\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📧 *E-MAIL:* ${p.email || 'Não informado'}\n📍 *ENDEREÇO:* ${p.end}\n🛠️ *SERVIÇO:* ${p.tipo_servico || 'Troca de Bateria'}\n🚗 *VEÍCULO:* ${p.veic} (${anoVeiculo})\n⚡ *AMPERAGEM:* ${p.amp}\n\n⏱️ *HORA DO PEDIDO:* ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n⏱️ *PREVISÃO:* 40 MINUTOS.\n\n*MANDAR O ORÇAMENTO PARA O CLIENTE O MAIS BREVE POSSÍVEL*`;
 
             let botoesHtml = '';
             let primeiroLink = "";
@@ -166,7 +168,7 @@
                     <div class="info-item"><b>E-MAIL:</b> ${p.email || 'N/A'}</div>
                     <div class="info-item"><b>SERVIÇO:</b> ${p.tipo_servico || 'Troca'}</div>
                     <div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div>
-                    <div class="info-item"><b>VEÍCULO:</b> ${p.veic} | ${p.ano}</div>
+                    <div class="info-item"><b>VEÍCULO:</b> ${p.veic} | ${anoVeiculo}</div>
                     <div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>
                 </div>
                 <div class="data-registro">🕒 Recebido em: ${dataHoraTexto}</div>
