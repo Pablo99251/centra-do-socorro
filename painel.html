@@ -40,7 +40,7 @@
         
         input { width: 100%; padding: 12px; margin-bottom: 10px; background: #000; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
         b { color: var(--amarelo); }
-        .data-registro { font-size: 0.8rem; color: #888; margin-top: 10px; font-style: italic; }
+        .data-registro { font-size: 0.85rem; color: #fff; background: #333; padding: 5px; border-radius: 5px; margin-top: 10px; display: inline-block; border-left: 3px solid var(--amarelo); }
     </style>
 </head>
 <body>
@@ -100,7 +100,6 @@
                 if (tempo === 30 * 60 && !enviadoAuto) {
                     enviadoAuto = true;
                     document.getElementById(`auto-status-${id}`).style.display = "inline";
-                    
                     const botoes = card.querySelectorAll('.btn-zap');
                     botoes.forEach(b => {
                         if(!b.classList.contains('btn-clicado')) {
@@ -136,17 +135,20 @@
             new Audio('https://www.myinstants.com/media/sounds/whatsapp-notification.mp3').play();
 
             const agora = new Date();
-            const dataHoraTexto = agora.toLocaleDateString('pt-BR') + " às " + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            const horaAtual = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            const dataHoraTexto = agora.toLocaleDateString('pt-BR') + " às " + horaAtual;
             
-            // CORREÇÃO DO ANO (Tenta pegar de vários campos possíveis)
-            const anoVeiculo = p.ano || p.ano_veic || 'Não informado';
+            // MAPEAMENTO INTELIGENTE (Se o campo vier com nome diferente, ele captura)
+            const anoFinal = p.ano || p.ano_veic || p.Ano || "Não informado";
+            const ampFinal = p.amp || p.amperagem || p.capacidade || "Não informado";
+            const emailFinal = p.email || p.Email || "Não informado";
+            const servicoFinal = p.tipo_servico || p.servico || "Troca de Bateria";
 
             const item = document.createElement('div');
             item.className = 'card-pedido';
             item.id = `pedido-${totalPedidosGeral}`;
             
-            // MENSAGEM COM HORÁRIO DO PEDIDO NO WHATSAPP
-            let msgZap = `🔋 *PEDIDO DE BATERIA* - CENTRAL DO SOCORRO 🚨\n\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📧 *E-MAIL:* ${p.email || 'Não informado'}\n📍 *ENDEREÇO:* ${p.end}\n🛠️ *SERVIÇO:* ${p.tipo_servico || 'Troca de Bateria'}\n🚗 *VEÍCULO:* ${p.veic} (${anoVeiculo})\n⚡ *AMPERAGEM:* ${p.amp}\n\n⏱️ *HORA DO PEDIDO:* ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n⏱️ *PREVISÃO:* 40 MINUTOS.\n\n*MANDAR O ORÇAMENTO PARA O CLIENTE O MAIS BREVE POSSÍVEL*`;
+            let msgZap = `🔋 *PEDIDO DE BATERIA* - CENTRAL DO SOCORRO 🚨\n\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📧 *E-MAIL:* ${emailFinal}\n📍 *ENDEREÇO:* ${p.end}\n🛠️ *SERVIÇO:* ${servicoFinal}\n🚗 *VEÍCULO:* ${p.veic} (${anoFinal})\n⚡ *AMPERAGEM:* ${ampFinal}\n\n⏱️ *HORA DO PEDIDO:* ${horaAtual}\n⏱️ *PREVISÃO:* 40 MINUTOS.\n\n*MANDAR O ORÇAMENTO PARA O CLIENTE O MAIS BREVE POSSÍVEL*`;
 
             let botoesHtml = '';
             let primeiroLink = "";
@@ -165,13 +167,13 @@
                 <div class="info-grid">
                     <div class="info-item"><b>CLIENTE:</b> ${p.nome}</div>
                     <div class="info-item"><b>TEL:</b> ${p.tel}</div>
-                    <div class="info-item"><b>E-MAIL:</b> ${p.email || 'N/A'}</div>
-                    <div class="info-item"><b>SERVIÇO:</b> ${p.tipo_servico || 'Troca'}</div>
+                    <div class="info-item"><b>E-MAIL:</b> ${emailFinal}</div>
+                    <div class="info-item"><b>SERVIÇO:</b> ${servicoFinal}</div>
                     <div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div>
-                    <div class="info-item"><b>VEÍCULO:</b> ${p.veic} | ${anoVeiculo}</div>
-                    <div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>
+                    <div class="info-item"><b>VEÍCULO:</b> ${p.veic} | ${anoFinal}</div>
+                    <div class="info-item"><b>AMPERAGEM:</b> ${ampFinal}</div>
                 </div>
-                <div class="data-registro">🕒 Recebido em: ${dataHoraTexto}</div>
+                <div class="data-registro">🕒 Pedido feito em: ${dataHoraTexto}</div>
                 <div class="botoes-direcionar">${botoesHtml}</div>
             `;
             
