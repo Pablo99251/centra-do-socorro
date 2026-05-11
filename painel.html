@@ -35,9 +35,6 @@
 
         .lembrete-bruto { background: #330000; border: 1px dashed var(--vermelho); color: #ff9999; padding: 10px; border-radius: 8px; margin-top: 15px; font-size: 0.85rem; font-weight: bold; text-align: center; text-transform: uppercase; }
         
-        /* ESTILO DA BARRINHA DE SERVIÇO */
-        .barrinha-servico { background: #333; color: var(--amarelo); padding: 8px; border-radius: 8px; font-weight: 900; margin-bottom: 15px; border-left: 5px solid var(--amarelo); text-align: left; font-size: 1rem; text-transform: uppercase; }
-
         .botoes-direcionar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
         .btn-zap { background: var(--verde); color: #fff; padding: 12px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.85rem; flex-grow: 1; text-align: center; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-clicado { background: var(--azul) !important; }
@@ -110,7 +107,6 @@
 
         document.getElementById('input-senha-login').addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
         function fecharModais() { document.getElementById('modalConfig').style.display='none'; document.getElementById('overlay').style.display='none'; }
-        
         function abrirConfig() { 
             document.getElementById('modalConfig').style.display='block'; 
             document.getElementById('overlay').style.display='block'; 
@@ -129,7 +125,6 @@
         }
 
         function adicionarCampoContato() { configAtendentes.push({ nome: "", numero: "" }); renderizarCamposConfig(); }
-        
         function salvarConfig() { 
             configTempos.geral = parseInt(document.getElementById('cfgTempoGeral').value);
             configTempos.auto = parseInt(document.getElementById('cfgTempoAuto').value);
@@ -153,8 +148,8 @@
 
         function exportarRelatorio() {
             if(bancoDeDados.length === 0) return alert("Banco vazio!");
-            let csv = "ID;Data;Nome;Telefone;Endereco;Veiculo;Ano;Amperagem\n";
-            bancoDeDados.forEach(p => { csv += `${p.id};${p.data};${p.nome};${p.tel};${p.end};${p.veic};${p.ano};${p.amp}\n`; });
+            let csv = "ID;Data;Nome;Email;Telefone;Endereco;Veiculo;Ano;Amperagem\n";
+            bancoDeDados.forEach(p => { csv += `${p.id};${p.data};${p.nome};${p.email};${p.tel};${p.end};${p.veic};${p.ano};${p.amp}\n`; });
             const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -191,35 +186,36 @@
                 new Audio('https://www.myinstants.com/media/sounds/whatsapp-notification.mp3').play();
                 const agora = new Date();
                 const dataFormatada = agora.toLocaleDateString('pt-BR') + " " + agora.toLocaleTimeString('pt-BR');
-
-                // LÓGICA DA BARRINHA DE SERVIÇO
-                const identifServico = p.serv === "Auto Socorro" ? "🚨 SERVIÇO: AUTO SOCORRO" : "🔋 SERVIÇO: TROCA DE BATERIA";
-
-                bancoDeDados.push({ id: totalPedidosGeral, data: dataFormatada, nome: p.nome, tel: p.tel, end: p.end, veic: p.veic, ano: p.ano, amp: p.amp });
+                
+                bancoDeDados.push({ id: totalPedidosGeral, data: dataFormatada, nome: p.nome, email: p.email || 'N/A', tel: p.tel, end: p.end, veic: p.veic, ano: p.ano || 'N/A', amp: p.amp });
                 localStorage.setItem('vampirao_bd', JSON.stringify(bancoDeDados));
 
                 const item = document.createElement('div');
                 item.className = 'card-pedido';
                 item.id = `pedido-${totalPedidosGeral}`;
                 
-                let msgZap = `🔋 *PEDIDO:* ${identifServico}\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📍 *LOCAL:* ${p.end}\n🚗 *VEÍCULO:* ${p.veic}`;
+                // AJUSTE PARA RECONHECER O SERVIÇO DO SITE
+                const tipoServico = (p.serv === "Auto Socorro") ? "🚨 AUTO SOCORRO" : "🔋 TROCA DE BATERIA";
+                
+                let msgZap = `*${tipoServico}* - CENTRAL DO SOCORRO\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📍 *ENDEREÇO:* ${p.end}\n🚗 *VEÍCULO:* ${p.veic}\n⚡ *AMPERAGEM:* ${p.amp}`;
                 let botoesHtml = ''; let primeiroLink = "";
                 configAtendentes.forEach((c, index) => { if(c.numero) { let link = `https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}`; if(index === 0) primeiroLink = link; botoesHtml += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="${link}" target="_blank">ENVIAR PARA ${c.nome}</a>`; } });
 
                 item.innerHTML = `
                     <div class="num-pedido">#${totalPedidosGeral}</div>
                     <div class="timer-container" id="timer-${totalPedidosGeral}">⏳ LIMITE: ${configTempos.geral}:00</div>
-                    
-                    <div class="barrinha-servico">${identifServico}</div>
-
                     <div class="info-grid">
+                        <div class="info-item"><b>SERVIÇO:</b> ${tipoServico}</div>
                         <div class="info-item"><b>CLIENTE:</b> ${p.nome}</div>
                         <div class="info-item"><b>TEL:</b> ${p.tel}</div>
+                        <div class="info-item"><b>E-MAIL:</b> ${p.email || 'Não informado'}</div>
                         <div class="info-item"><b>VEÍCULO:</b> ${p.veic}</div>
+                        <div class="info-item"><b>ANO:</b> ${p.ano || 'Não informado'}</div>
                         <div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div>
                         <div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>
                     </div>
                     <div class="lembrete-bruto">⚠️ Mandar orçamento para o cliente o mais rápido possível.</div>
+                    <div style="font-size:0.8rem; color:#888; margin-top:10px;">📅 Recebido em: ${dataFormatada}</div>
                     <div class="botoes-direcionar">${botoesHtml}</div>`;
 
                 const lista = document.getElementById('lista');
