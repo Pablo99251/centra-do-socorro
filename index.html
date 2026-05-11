@@ -40,13 +40,16 @@
 
         .footer { margin-top: 30px; padding: 20px; border-top: 1px solid #333; font-size: 0.9rem; color: #aaa; padding-bottom: 50px; line-height: 1.6; }
         
+        /* AJUSTE DE CENTRALIZAÇÃO AQUI */
         #tela-sucesso {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; flex-direction: column; justify-content: flex-start; align-items: center;
-            padding: 20px; text-align: center; overflow-y: auto;
+            background: #000; z-index: 9999; flex-direction: column; 
+            justify-content: center; /* Centraliza verticalmente */
+            align-items: center; /* Centraliza horizontalmente */
+            padding: 20px; text-align: center; overflow-y: auto; box-sizing: border-box;
         }
-        .sucesso-icone { font-size: 5rem; margin-top: 20px; color: var(--verde); }
-        .sucesso-texto { font-size: 1.8rem; font-weight: 900; color: var(--amarelo); margin-bottom: 10px; }
+        .sucesso-icone { font-size: 5rem; margin-bottom: 10px; color: var(--verde); }
+        .sucesso-texto { font-size: 1.8rem; font-weight: 900; color: var(--amarelo); margin-bottom: 20px; }
         .passo-a-passo {
             background: var(--cinza); border: 2px solid var(--amarelo);
             padding: 20px; border-radius: 15px; text-align: left;
@@ -150,7 +153,6 @@
     </div>
 
     <script>
-        // MANTIVE SUA LISTA DE MODELOS INTACTA
         const modelos = {
             carro: ["Audi A1", "Audi A3", "Audi A4", "Audi Q3", "Audi Q5", "BMW Série 1", "BMW Série 3", "BMW X1", "BMW X3", "Caoa Chery Arrizo 5", "Caoa Chery Tiggo 2", "Caoa Chery Tiggo 5X", "Chevrolet Agile", "Chevrolet Astra", "Chevrolet Blazer", "Chevrolet Celta", "Chevrolet Classic", "Chevrolet Cobalt", "Chevrolet Corsa", "Chevrolet Cruze", "Chevrolet Equinox", "Chevrolet Joy", "Chevrolet Kadett", "Chevrolet Meriva", "Chevrolet Montana", "Chevrolet Monza", "Chevrolet Onix", "Chevrolet Onix Plus", "Chevrolet Prisma", "Chevrolet S10", "Chevrolet Spin", "Chevrolet Tracker", "Chevrolet Vectra", "Chevrolet Zafira", "Chevrolet Opala", "Chevrolet Caravan", "Chevrolet Chevette", "Chevrolet Marajó", "Chevrolet Monza (Antigo)", "Chevrolet Ipanema", "Chevrolet Veraneio", "Chevrolet C10", "Chevrolet D20", "Citroën C3", "Citroën C4", "Citroën C4 Cactus", "Dodge Journey", "Dodge Ram", "Dodge Dart", "Dodge Charger R/T", "Dodge LeBaron", "Fiat Argo", "Fiat Bravo", "Fiat Cronos", "Fiat Doblò", "Fiat Fiorino", "Fiat Grand Siena", "Fiat Idea", "Fiat Linea", "Fiat Mobi", "Fiat Palio", "Fiat Palio Weekend", "Fiat Punto", "Fiat Siena", "Fiat Strada", "Fiat Toro", "Fiat Uno", "Fiat 147", "Fiat Oggi", "Fiat Panorama", "Fiat Uno Mille", "Fiat Prêmio", "Fiat Elba", "Fiat Tempra", "Fiat Tipo", "Ford EcoSport", "Ford Fiesta", "Ford Focus", "Ford Fusion", "Ford Ka", "Ford Ranger", "Ford Corcel", "Ford Corcel II", "Ford Del Rey", "Ford Belina", "Ford Escort", "Ford Verona", "Ford Pampa", "Ford Galaxie", "Ford Landau", "Honda City", "Honda Civic", "Honda CR-V", "Honda Fit", "Honda HR-V", "Hyundai Creta", "Hyundai HB20", "Hyundai HB20S", "Hyundai ix35", "Hyundai Santa Fé", "Hyundai Tucson", "Jeep Compass", "Jeep Renegade", "Willys Jeep", "Willys Rural", "Willys Aero", "Jeep CJ5", "Kia Cerato", "Kia Picanto", "Kia Sorento", "Kia Sportage", "Mitsubishi ASX", "Mitsubishi L200", "Mitsubishi Outlander", "Nissan Frontier", "Nissan Kicks", "Nissan March", "Nissan Sentra", "Nissan Versa", "Peugeot 206", "Peugeot 207", "Peugeot 208", "Peugeot 2008", "Peugeot 3008", "Renault Clio", "Renault Duster", "Renault Kwid", "Renault Logan", "Renault Sandero", "Renault Stepway", "Toyota Corolla", "Toyota Etios", "Toyota Hilux", "Toyota SW4", "Toyota Yaris", "Volkswagen Amarok", "Volkswagen Fox", "Volkswagen Gol", "Volkswagen Golf", "Volkswagen Jetta", "Volkswagen Nivus", "Volkswagen Parati", "Volkswagen Polo", "Volkswagen Saveiro", "Volkswagen T-Cross", "Volkswagen Tiguan", "Volkswagen Voyage", "Volkswagen Fusca", "Volkswagen Brasília", "Volkswagen Variant", "Volkswagen TL", "Volkswagen SP2", "Volkswagen Gol (Quadrado)", "Volkswagen Parati (Quadrada)", "Volkswagen Voyage (Quadrado)", "Volkswagen Santana", "Volkswagen Quantum", "Gurgel BR-800", "Gurgel Supermini", "Puma GT", "Puma GTE", "Miura"],
             moto: ["Honda Biz 100", "Honda Biz 110i", "Honda Biz 125", "Honda CG 125", "Honda CG 150", "Honda CG 160", "Honda Fan 125", "Honda Fan 150", "Honda Fan 160", "Honda Titan 125", "Honda Titan 150", "Honda Titan 160", "Honda Start 160", "Honda Cargo 125", "Honda NXR Bros 125", "Honda NXR Bros 150", "Honda NXR Bros 160", "Honda Pop 100", "Honda Pop 110i", "Honda XRE 190", "Honda XRE 300", "Honda Sahara 350", "Honda Falcon 400", "Honda Twister 250", "Honda CB 300", "Honda CB 500", "Honda Hornet 600", "Honda CBR 600", "Honda CBR 1000", "Honda Shadow 600", "Honda Shadow 750", "Yamaha Factor 125", "Yamaha Factor 150", "Yamaha Fazer 150", "Yamaha Fazer 250", "Yamaha Lander 250", "Yamaha Crosser 150", "Yamaha XTZ 125", "Yamaha XTZ 150", "Yamaha XTZ 250", "Yamaha XT 600", "Yamaha XT 660", "Yamaha YBR 125", "Yamaha Crypton", "Yamaha Neo 125", "Yamaha NMax 160", "Yamaha MT-03", "Yamaha MT-07", "Yamaha R3", "Yamaha R1", "Suzuki Yes 125", "Suzuki Intruder 125", "Suzuki Intruder 250", "Suzuki Burgman 125", "Suzuki GS 500", "Suzuki Bandit 600", "Suzuki Bandit 1200", "Suzuki V-Strom 650", "Suzuki Hayabusa", "Kawasaki Ninja 250", "Kawasaki Ninja 300", "Kawasaki Ninja 400", "Kawasaki Ninja 650", "Kawasaki Ninja ZX-6R", "Kawasaki Z300", "Kawasaki Z400", "Kawasaki Z650", "Kawasaki Versys 300", "Kawasaki Versys 650", "Dafra Speed 150", "Dafra Kansas 150", "Dafra Next 250", "Dafra Horizon 150", "Dafra Citycom 300", "Shineray XY 50", "Shineray Jet 50", "Shineray Worker 125", "Shineray Phoenix 50", "Shineray Discover 250", "Traxx Star 50", "Traxx JL 110", "Traxx Sky 125", "Sundown Hunter 90", "Sundown Max 125", "Sundown Web 100", "Mobilete (Caloi Mobylette)", "Honda ML 125", "Honda Turuna 125", "Honda Today 125", "Yamaha DT 180", "Yamaha RX 125", "Yamaha RD 135", "Yamaha RD 350", "Agrale 27.5", "Agrale SXT 27.5", "Kasinski Comet 250", "Kasinski Mirage 250"],
@@ -180,12 +182,11 @@
             const btn = document.getElementById('btn-finalizar');
             btn.innerText = "ENVIANDO..."; btn.disabled = true;
 
-            // --- AQUI ESTÁ A CORREÇÃO: ADICIONEI O CAMPO 'serv' ---
             const dados = {
                 vampirao_ios: "SISTEMA_BRUTO_V1", 
                 nome: nome, 
                 tel: tel,
-                serv: document.getElementById('servico-tipo').value, // PEGA O TIPO DE SERVIÇO
+                serv: document.getElementById('servico-tipo').value,
                 email: document.getElementById('email').value, 
                 end: document.getElementById('endereco').value,
                 veic: document.getElementById('veiculo').value,
