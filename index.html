@@ -2,211 +2,256 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Central do Socorro - Oficial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOCORRO BATERIAS - Rápido e Seguro</title>
     <style>
         :root {
-            --amarelo: #ffcc00; --preto: #000000; --cinza: #1a1a1a;
-            --branco: #ffffff; --vermelho: #ff0000; --verde: #25d366;
-            --azul-ok: #007bff;
-        }
-        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--preto); color: var(--branco); margin: 0; padding: 0; text-align: center; }
-        @keyframes pulsar {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); text-shadow: 0 0 10px var(--amarelo); }
-            100% { transform: scale(1); }
-        }
-        header { padding: 20px; }
-        .logo-md { font-size: 3.5rem; font-weight: 900; color: var(--amarelo); margin: 0; line-height: 1; text-transform: uppercase; }
-        .tempo-entrega { font-size: 1.8rem; font-weight: 900; color: var(--amarelo); animation: pulsar 1.5s infinite; margin: 15px 0; }
-        .servicos { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
-        .servicos span { color: var(--amarelo); display: block; }
-        .parcela { background: var(--vermelho); padding: 10px 20px; border-radius: 5px; font-size: 1.5rem; font-weight: 900; display: inline-block; margin: 10px 0; }
-        .destaque-preco { background: #333; border: 1px dashed var(--amarelo); padding: 10px; margin: 10px 0; border-radius: 10px; font-size: 0.9rem; }
-        .destaque-preco b { color: var(--amarelo); font-size: 1.1rem; }
-        .container { max-width: 450px; margin: 0 auto; padding: 15px; }
-        .card { background: var(--cinza); padding: 25px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 5px 20px rgba(0,0,0,0.8); }
-        label { display: block; margin-top: 15px; color: var(--amarelo); font-weight: 600; text-align: left; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 15px; margin-top: 5px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; box-sizing: border-box; font-size: 16px; outline: none; -webkit-appearance: none; }
-        
-        .area-botoes { margin-top: 25px; display: flex; flex-direction: column; gap: 12px; }
-        
-        .btn-finalizar, .btn-ligar { 
-            width: 100%; padding: 20px; border-radius: 50px; font-weight: 800; font-size: 1.3rem; 
-            cursor: pointer; border: none; text-transform: uppercase; display: flex; 
-            justify-content: center; align-items: center; box-sizing: border-box; 
-            transition: background 0.1s ease; text-decoration: none; -webkit-appearance: none; touch-action: manipulation;
+            --primary: #ffcc00;
+            --bg: #0b0b0b;
+            --card: #161616;
+            --text: #ffffff;
+            --input-bg: #222;
         }
 
-        .cor-verde { background-color: var(--verde) !important; color: #fff !important; }
-        .cor-amarela { background: var(--amarelo) !important; color: #000 !important; }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-        .footer { margin-top: 30px; padding: 20px; border-top: 1px solid #333; font-size: 0.9rem; color: #aaa; padding-bottom: 50px; line-height: 1.6; }
-        
+        .container {
+            width: 90%;
+            max-width: 450px;
+            background: var(--card);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            margin: 20px 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        p.subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            background: var(--input-bg);
+            border: 2px solid #333;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.2);
+        }
+
+        .btn-enviar {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-enviar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.4);
+        }
+
+        /* TELA DE SUCESSO MODERNA */
         #tela-sucesso {
             display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            flex-direction: column; justify-content: center; align-items: center;
-            padding: 20px; text-align: center;
+            text-align: left;
         }
-        .sucesso-icone { font-size: 6rem; margin-bottom: 20px; }
-        .sucesso-texto { font-size: 2rem; font-weight: 900; color: var(--amarelo); }
-        .sucesso-sub { font-size: 1.3rem; color: #fff; margin-top: 15px; }
+
+        .passo-a-passo {
+            background: #222;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .item-passo {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .check-icon { color: var(--primary); font-weight: bold; }
+
+        .footer-sucesso {
+            text-align: center;
+            margin-top: 25px;
+            font-weight: bold;
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
-    <div id="conteudo-site">
-        <header>
-            <h1 class="logo-md">CENTRAL DO SOCORRO</h1>
-            <div class="tempo-entrega">🚀 ENTREGA EM 40 MINUTOS</div>
-            <div class="servicos">
-                <span>🛠️ ENTREGA E INSTALAÇÃO GRÁTIS</span>
-                <span>⚡ TESTE DE BATERIA E ALTERNADOR GRÁTIS</span>
-                SÃO PAULO E GRANDE SÃO PAULO
-            </div>
-            <div class="parcela">10X SEM JUROS NO CARTÃO</div>
-        </header>
 
-        <div class="container">
-            <div class="card">
-                <div class="destaque-preco">
-                    🚨 AUTO SOCORRO: <b>R$ 60,00</b> <small>(Até 5km)</small><br>
-                    🔋 BATERIAS A PARTIR DE: <b>R$ 260,00*</b>
-                </div>
-
-                <label>TIPO DE SERVIÇO</label>
-                <select id="servico-tipo">
-                    <option value="Troca de Bateria">Troca de Bateria</option>
-                    <option value="Auto Socorro">Auto Socorro (R$ 60 até 5km)</option>
-                </select>
-
-                <label>NOME COMPLETO</label>
-                <input type="text" id="nome" placeholder="Seu nome">
-
-                <label>E-MAIL</label>
-                <input type="email" id="email" placeholder="seuemail@exemplo.com">
-
-                <label>TELEFONE / WHATSAPP</label>
-                <input type="tel" id="telefone" placeholder="(11) 99251-2161">
-
-                <label>ENDEREÇO COMPLETO</label>
-                <input type="text" id="endereco" placeholder="Ex: Rua Rudge, 709 - Bom Retiro">
-
-                <label>VEÍCULO</label>
-                <select id="tipo-veiculo" onchange="atualizarModelos()">
-                    <option value="carro">Carro</option>
-                    <option value="moto">Moto</option>
-                    <option value="caminhao">Caminhão</option>
-                </select>
-
-                <label>MODELO DO VEÍCULO</label>
-                <input type="text" id="veiculo" list="lista-dinamica" placeholder="Busque ou digite o modelo...">
-                <datalist id="lista-dinamica"></datalist>
-
-                <label>ANO DO VEÍCULO</label>
-                <input type="number" id="ano-veiculo" placeholder="Ex: 2024">
-
-                <label>AMPERAGEM DESEJADA</label>
-                <select id="amperagem">
-                    <option value="Não sei">Não sei a amperagem</option>
-                    <option value="4Ah a 18Ah">4Ah a 18Ah (Motos)</option>
-                    <option value="45Ah">45Ah</option>
-                    <option value="50Ah">50Ah</option>
-                    <option value="60Ah">60Ah</option>
-                    <option value="70Ah a 90Ah">70Ah a 90Ah</option>
-                    <option value="100Ah a 280Ah">100Ah a 280Ah (Pesados)</option>
-                </select>
-
-                <div class="area-botoes">
-                    <button id="btn-finalizar" class="btn-finalizar cor-verde" onclick="enviarComando(event)">
-                        FINALIZAR PEDIDO
-                    </button>
-                    <a href="tel:11992512161" class="btn-ligar cor-amarela">LIGAR PARA CENTRAL</a>
-                </div>
-            </div>
-            <div class="footer">
-                🛡️ <b>CENTRAL DO SOCORRO - SÃO PAULO</b><br>
-                📍 Av. Rudge, 709 - Bom Retiro, São Paulo - SP<br>
-                📄 <b>MD BATERIAS - CNPJ: 21.559.107/0001-44</b><br>
-                ✅ Garantia total de 1 a 2 anos em toda linha
-            </div>
+<div class="container" id="container-principal">
+    <div id="formulario-cliente">
+        <div class="header">
+            <span class="logo-icon">⚡</span>
+            <h1>Socorro Baterias</h1>
+            <p class="subtitle">Sua energia entregue por especialistas</p>
         </div>
+
+        <div class="form-group">
+            <label>Seu Nome Completo</label>
+            <input type="text" id="nome" placeholder="Ex: João Silva">
+        </div>
+
+        <div class="form-group">
+            <label>WhatsApp para Contato</label>
+            <input type="tel" id="tel" placeholder="(11) 99999-9999">
+        </div>
+
+        <div class="form-group">
+            <label>Endereço de Entrega</label>
+            <input type="text" id="end" placeholder="Rua, número e bairro">
+        </div>
+
+        <div class="form-group">
+            <label>Veículo / Carro</label>
+            <input type="text" id="veic" placeholder="Ex: Honda Civic">
+        </div>
+
+        <div class="form-group">
+            <label>Amperagem Sugerida</label>
+            <select id="amp">
+                <option value="Não sei">Não tenho certeza</option>
+                <option value="40Ah">40Ah</option>
+                <option value="60Ah">60Ah</option>
+                <option value="70Ah">70Ah</option>
+                <option value="90Ah">90Ah</option>
+            </select>
+        </div>
+
+        <button class="btn-enviar" onclick="enviarPedido()">Solicitar Técnico Agora</button>
     </div>
 
     <div id="tela-sucesso">
-        <div class="sucesso-icone">✅</div>
-        <div class="sucesso-texto">PEDIDO JÁ FOI FEITO!</div>
-        <div class="sucesso-sub">Aguarde chegar no seu WhatsApp.</div>
+        <div class="header">
+            <span class="logo-icon" style="color: #25d366;">✅</span>
+            <h1 style="color: #25d366;">Pedido Recebido!</h1>
+            <p class="subtitle">Veja como funciona o seu atendimento:</p>
+        </div>
+
+        <div class="passo-a-passo">
+            <div class="item-passo">
+                <span class="check-icon">01.</span>
+                <span>Sua solicitação chegou na nossa Central e já estamos localizando a <b>distribuidora mais próxima</b> de você.</span>
+            </div>
+            <div class="item-passo">
+                <span class="check-icon">02.</span>
+                <span>Em instantes, nossa equipe enviará pelo WhatsApp o <b>valor exato</b> da bateria específica para o seu veículo.</span>
+            </div>
+            <div class="item-passo">
+                <span class="check-icon">03.</span>
+                <span>Um <b>técnico registrado</b> da distribuidora levará a bateria até você com total segurança.</span>
+            </div>
+            <div class="item-passo">
+                <span class="check-icon">04.</span>
+                <span>O pagamento é feito <b>diretamente ao técnico</b> após a instalação.</span>
+            </div>
+            <div class="item-passo">
+                <span class="check-icon">05.</span>
+                <span>Você receberá o termo de garantia oficial (de <b>1 a 2 anos</b>, dependendo do modelo).</span>
+            </div>
+        </div>
+
+        <div class="footer-sucesso">
+            📢 Após a entrega, nos dê seu feedback no WhatsApp!
+        </div>
     </div>
+</div>
 
-    <script>
-        const modelos = {
-            carro: ["Chevrolet Onix", "Fiat Strada", "Volkswagen Polo", "Hyundai HB20", "Fiat Argo", "Toyota Corolla", "Jeep Compass", "Chevrolet Tracker"],
-            moto: ["Honda CG 160", "Honda Biz 125", "Honda NXR 160 Bros", "Yamaha Fazer 250"],
-            caminhao: ["Mercedes Accelo", "Volvo FH", "Scania R", "VW Delivery"]
-        };
+<script>
+    function enviarPedido() {
+        const nome = document.getElementById('nome').value;
+        const tel = document.getElementById('tel').value;
+        const end = document.getElementById('end').value;
+        const veic = document.getElementById('veic').value;
+        const amp = document.getElementById('amp').value;
 
-        function atualizarModelos() {
-            const tipo = document.getElementById('tipo-veiculo').value;
-            const datalist = document.getElementById('lista-dinamica');
-            document.getElementById('veiculo').value = ""; 
-            datalist.innerHTML = "";
-            if (modelos[tipo]) {
-                modelos[tipo].forEach(mod => {
-                    const option = document.createElement('option');
-                    option.value = mod; 
-                    datalist.appendChild(option);
-                });
-            }
+        if(!nome || !tel || !end) {
+            alert("Por favor, preencha nome, telefone e endereço para continuarmos.");
+            return;
         }
-        window.onload = atualizarModelos;
 
-        let jaEnviou = false;
+        const pedido = { nome, tel, end, veic, amp };
 
-        function enviarComando(event) {
-            if (jaEnviou) return;
+        // Envia para o NTFY (Mesmo link que o seu ADM escuta)
+        fetch('https://ntfy.sh/central_socorro_vampirao_ios', {
+            method: 'POST',
+            body: JSON.stringify(pedido)
+        })
+        .then(() => {
+            // Esconde formulário e mostra explicação
+            document.getElementById('formulario-cliente').style.display = 'none';
+            document.getElementById('tela-sucesso').style.display = 'block';
+        })
+        .catch(err => alert("Erro ao enviar. Tente novamente."));
+    }
+</script>
 
-            const nome = document.getElementById('nome').value;
-            const tel = document.getElementById('telefone').value;
-            const email = document.getElementById('email').value; 
-            const ano = document.getElementById('ano-veiculo').value;
-
-            if(!nome || !tel) {
-                alert("Preencha Nome e Telefone!");
-                return;
-            }
-
-            jaEnviou = true;
-            const btn = document.getElementById('btn-finalizar');
-            btn.innerText = "ENVIANDO...";
-            btn.disabled = true;
-
-            const dados = {
-                vampirao_ios: "SISTEMA_BRUTO_V1",
-                nome: nome,
-                tel: tel,
-                email: email, 
-                end: document.getElementById('endereco').value,
-                veic: document.getElementById('veiculo').value,
-                ano: ano,
-                amp: document.getElementById('amperagem').value
-            };
-
-            fetch('https://ntfy.sh/central_socorro_vampirao_ios', {
-                method: 'POST',
-                body: JSON.stringify(dados)
-            }).then(() => {
-                document.getElementById('conteudo-site').style.display = 'none';
-                document.getElementById('tela-sucesso').style.display = 'flex';
-            }).catch(() => {
-                alert("Erro de sinal. Tente novamente.");
-                jaEnviou = false;
-                btn.disabled = false;
-                btn.innerText = "FINALIZAR PEDIDO";
-            });
-        }
-    </script>
 </body>
 </html>
