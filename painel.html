@@ -74,17 +74,23 @@
         
         <div id="modalConfig">
             <h3 style="color:var(--amarelo); margin-top:0;">⚙️ Configurações</h3>
+            
             <span class="label-config">Tempo Limite Entrega (Minutos):</span>
             <input type="number" id="cfgTempoGeral">
+            
             <span class="label-config">Disparo Automático após (Minutos):</span>
             <input type="number" id="cfgTempoAuto">
+
             <span class="label-config">🔐 Alterar Senha do Painel:</span>
             <input type="text" id="cfgSenha" placeholder="Nova senha">
+
             <hr style="border:1px solid #333; margin: 20px 0;">
+            
             <h3 style="color:var(--amarelo)">📱 Atendentes WhatsApp</h3>
             <div id="listaContatosConfig"></div>
             <button class="btn-zap" style="background:#444; width:100%; margin-bottom: 10px;" onclick="adicionarCampoContato()">+ Adicionar Número</button>
             <button class="btn-zap" style="width:100%" onclick="salvarConfig()">✅ SALVAR TUDO</button>
+
             <hr style="border:1px solid #333; margin: 20px 0;">
             <h3 style="color:var(--vermelho)">⚠️ Zona de Perigo</h3>
             <button class="btn-reset" onclick="zerarTudo()">🚨 ZERAR PEDIDOS E CONTADOR</button>
@@ -102,10 +108,14 @@
                 document.getElementById('tela-bloqueio').style.display = 'none';
                 document.getElementById('painel-conteudo').style.display = 'block';
                 conectarAoNtfy();
-            } else { alert("Senha Incorreta!"); document.getElementById('input-senha-login').value = ""; }
+            } else {
+                alert("Senha Incorreta!");
+                document.getElementById('input-senha-login').value = "";
+            }
         }
 
         document.getElementById('input-senha-login').addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
+
         function fecharModais() { document.getElementById('modalConfig').style.display='none'; document.getElementById('overlay').style.display='none'; }
         
         function abrirConfig() { 
@@ -133,15 +143,19 @@
             configTempos.senha = document.getElementById('cfgSenha').value;
             localStorage.setItem('vampirao_contatos', JSON.stringify(configAtendentes)); 
             localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
-            alert("Configurações salvas!"); fecharModais(); 
+            alert("Configurações salvas!");
+            fecharModais(); 
         }
 
+        // --- NOVA FUNÇÃO PARA ZERAR TUDO ---
         function zerarTudo() {
-            if (confirm("ATENÇÃO: Deseja zerar tudo?")) {
-                totalPedidosGeral = 0; bancoDeDados = [];
+            if (confirm("ATENÇÃO: Isso vai apagar todos os pedidos da tela e o contador voltará para #1. Deseja continuar?")) {
+                totalPedidosGeral = 0;
+                bancoDeDados = [];
                 localStorage.setItem('vampirao_total', 0);
                 localStorage.setItem('vampirao_bd', JSON.stringify([]));
                 document.getElementById('lista').innerHTML = "Aguardando novos pedidos...";
+                alert("O sistema foi zerado! O próximo pedido será o número #1.");
                 fecharModais();
             }
         }
@@ -149,13 +163,13 @@
         function marcarComoEnviado(btn) { btn.classList.remove('btn-automatico'); btn.classList.add('btn-clicado'); btn.innerHTML = "✓ DIRECIONADO MANUAL"; }
 
         function exportarRelatorio() {
-            if(bancoDeDados.length === 0) return alert("Banco vazio!");
-            let csv = "ID;Data;Servico;Nome;Telefone;Endereco;Veiculo;Ano;Amperagem\n";
-            bancoDeDados.forEach(p => { csv += `${p.id};${p.data};${p.servico};${p.nome};${p.tel};${p.end};${p.veic};${p.ano};${p.amp}\n`; });
+            if(bancoDeDados.length === 0) return alert("Nenhum dado no banco ainda!");
+            let csv = "ID;Data e Hora;Nome;Email;Telefone;Endereco;Veiculo;Ano;Amperagem\n";
+            bancoDeDados.forEach(p => { csv += `${p.id};${p.data};${p.nome};${p.email};${p.tel};${p.end};${p.veic};${p.ano};${p.amp}\n`; });
             const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", `Relatorio_Vampirao.csv`);
+            link.setAttribute("download", `Relatorio_Vampirao_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
             link.click();
         }
 
@@ -172,6 +186,7 @@
                     card.querySelectorAll('.btn-zap').forEach(b => { if(!b.classList.contains('btn-clicado')) { b.classList.add('btn-automatico'); b.innerHTML = "⚡ ENVIADO AUTOMÁTICO"; } });
                     window.open(linkZap, '_blank');
                 }
+                if (tempoGeral <= 5 * 60) { card.style.borderColor = "var(--vermelho)"; if(elementoTimer) elementoTimer.classList.add('urgente'); }
                 if (tempoGeral <= 0) { clearInterval(intervalo); if(elementoTimer) elementoTimer.innerText = "❌ TEMPO EXCEDIDO!"; }
                 tempoGeral--;
             }, 1000);
@@ -188,26 +203,13 @@
                 new Audio('https://www.myinstants.com/media/sounds/whatsapp-notification.mp3').play();
                 const agora = new Date();
                 const dataFormatada = agora.toLocaleDateString('pt-BR') + " " + agora.toLocaleTimeString('pt-BR');
-
-                // --- LÓGICA DE IDENTIFICAÇÃO DE SERVIÇO ---
-                const isSocorro = p.serv === "Auto Socorro";
-                const tituloServico = isSocorro ? "🚨 AUTO SOCORRO" : "🔋 PEDIDO DE BATERIA";
-                const lembreteTexto = isSocorro ? "⚠️ CONFIRMAR LOCAL E INFORMAR TAXA DE KM EXCEDENTE (5%) SE PASSAR DE 5KM!" : "⚠️ Mandar orçamento da bateria para o cliente o mais rápido possível.";
-                
-                let msgZap = "";
-                if(isSocorro) {
-                    msgZap = `🚨 *CHAMADO DE AUTO SOCORRO* 🚨\n\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📍 *LOCAL:* ${p.end}\n🚗 *VEÍCULO:* ${p.veic}\n\n💰 *VALOR:* R$ 60,00 (Até 5km). Acima disso, +5% por KM.\n\n⚠️ *AÇÃO:* Enviar técnico para socorro imediato!`;
-                } else {
-                    msgZap = `🔋 *PEDIDO DE BATERIA* 🔋\n\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📍 *LOCAL:* ${p.end}\n🚗 *VEÍCULO:* ${p.veic}\n⚡ *AMPERAGEM:* ${p.amp}\n\n⚠️ *AÇÃO:* Enviar orçamento agora!`;
-                }
-
-                bancoDeDados.push({ id: totalPedidosGeral, data: dataFormatada, servico: tituloServico, nome: p.nome, tel: p.tel, end: p.end, veic: p.veic, ano: p.ano, amp: p.amp });
+                bancoDeDados.push({ id: totalPedidosGeral, data: dataFormatada, nome: p.nome, email: p.email || 'N/A', tel: p.tel, end: p.end, veic: p.veic, ano: p.ano || 'N/A', amp: p.amp });
                 localStorage.setItem('vampirao_bd', JSON.stringify(bancoDeDados));
 
                 const item = document.createElement('div');
                 item.className = 'card-pedido';
                 item.id = `pedido-${totalPedidosGeral}`;
-                
+                let msgZap = `🔋 *PEDIDO DE BATERIA* - CENTRAL DO SOCORRO 🚨\n\n👤 *CLIENTE:* ${p.nome}\n📧 *E-MAIL:* ${p.email || 'N/A'}\n📞 *CONTATO:* ${p.tel}\n📍 *ENDEREÇO:* ${p.end}\n🚗 *VEÍCULO:* ${p.veic}\n📅 *ANO:* ${p.ano || 'N/A'}\n⚡ *AMPERAGEM:* ${p.amp}\n\n⏱️ *HORA DO PEDIDO:* ${dataFormatada}\n\n⚠️ *LEMBRETE:* Mandar orçamento da bateria para o cliente o mais rápido possível.`;
                 let botoesHtml = ''; let primeiroLink = "";
                 configAtendentes.forEach((c, index) => { if(c.numero) { let link = `https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}`; if(index === 0) primeiroLink = link; botoesHtml += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="${link}" target="_blank">ENVIAR PARA ${c.nome}</a>`; } });
 
@@ -215,16 +217,17 @@
                     <div class="num-pedido">#${totalPedidosGeral}</div>
                     <div class="timer-container" id="timer-${totalPedidosGeral}">⏳ LIMITE: ${configTempos.geral}:00</div>
                     <div class="info-grid">
-                        <div class="info-item"><b>SERVIÇO:</b> ${tituloServico}</div>
                         <div class="info-item"><b>CLIENTE:</b> ${p.nome}</div>
                         <div class="info-item"><b>TEL:</b> ${p.tel}</div>
+                        <div class="info-item"><b>E-MAIL:</b> ${p.email || 'Não informado'}</div>
                         <div class="info-item"><b>VEÍCULO:</b> ${p.veic}</div>
+                        <div class="info-item"><b>ANO:</b> ${p.ano || 'Não informado'}</div>
                         <div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div>
-                        ${!isSocorro ? `<div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>` : ''}
+                        <div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>
                     </div>
-                    <div class="lembrete-bruto">${lembreteTexto}</div>
+                    <div class="lembrete-bruto">⚠️ Mandar orçamento da bateria para o cliente o mais rápido possível.</div>
+                    <div style="font-size:0.8rem; color:#888; margin-top:10px;">📅 Recebido em: ${dataFormatada}</div>
                     <div class="botoes-direcionar">${botoesHtml}</div>`;
-
                 const lista = document.getElementById('lista');
                 if(lista.innerHTML.includes("Aguardando")) lista.innerHTML = "";
                 lista.prepend(item);
