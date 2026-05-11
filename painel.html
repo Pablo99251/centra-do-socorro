@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>CENTRAL DO SOCORRO - PAINEL ADM</title>
+    <title>CENTRAL ADM DO SOCORRO</title>
     <style>
         :root { --amarelo: #ffcc00; --preto: #000; --cinza: #1a1a1a; --verde: #25d366; --azul: #007bff; --vermelho: #ff4444; --laranja: #ff8800; }
         body { background: var(--preto); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
@@ -73,7 +73,7 @@
 
     <div id="painel-conteudo">
         <div class="header-painel">
-            <h1>📟 CENTRAL ADM - VAMPIRÃO</h1>
+            <h1>📟 CENTRAL ADM DO SOCORRO</h1>
             <div class="controles">
                 <button class="btn-acao btn-relatorio" onclick="exportarRelatorio()">📊 BAIXAR RELATÓRIO</button>
                 <button class="btn-acao" onclick="abrirConfig()">⚙️ CONFIGS</button>
@@ -104,6 +104,10 @@
     </div>
 
     <script>
+        // CONFIGURAÇÃO GLOBAL DA SIRENE
+        const sireneAlerta = new Audio('https://www.soundjay.com/buttons/sounds/alarm-clock-01.mp3');
+        sireneAlerta.volume = 1.0;
+
         let configAtendentes = JSON.parse(localStorage.getItem('vampirao_contatos')) || [{ nome: "PRINCIPAL", numero: "5511992512161" }];
         let configTempos = JSON.parse(localStorage.getItem('vampirao_tempos')) || { geral: 40, auto: 10, senha: "123" };
         let totalPedidosGeral = JSON.parse(localStorage.getItem('vampirao_total')) || 0;
@@ -113,12 +117,15 @@
             if (document.getElementById('input-senha-login').value === configTempos.senha) {
                 document.getElementById('tela-bloqueio').style.display = 'none';
                 document.getElementById('painel-conteudo').style.display = 'block';
+                // Toca e pausa o áudio no login para "desbloquear" o som no navegador
+                sireneAlerta.play().then(() => { sireneAlerta.pause(); sireneAlerta.currentTime = 0; });
                 conectarAoNtfy();
             } else { alert("Senha Incorreta!"); document.getElementById('input-senha-login').value = ""; }
         }
 
         document.getElementById('input-senha-login').addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
         function fecharModais() { document.getElementById('modalConfig').style.display='none'; document.getElementById('overlay').style.display='none'; }
+        
         function abrirConfig() { 
             document.getElementById('modalConfig').style.display='block'; 
             document.getElementById('overlay').style.display='block'; 
@@ -156,7 +163,14 @@
             }
         }
 
-        function marcarComoEnviado(btn) { btn.classList.remove('btn-automatico'); btn.classList.add('btn-clicado'); btn.innerHTML = "✓ DIRECIONADO MANUAL"; }
+        function marcarComoEnviado(btn) { 
+            btn.classList.remove('btn-automatico'); 
+            btn.classList.add('btn-clicado'); 
+            btn.innerHTML = "✓ DIRECIONADO MANUAL"; 
+            // Para a sirene ao interagir com o pedido
+            sireneAlerta.pause();
+            sireneAlerta.currentTime = 0;
+        }
 
         function exportarRelatorio() {
             if(bancoDeDados.length === 0) return alert("Banco vazio!");
@@ -165,7 +179,7 @@
             const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", `Relatorio_Vampirao.csv`);
+            link.setAttribute("download", `Relatorio_Central.csv`);
             link.click();
         }
 
@@ -194,8 +208,13 @@
                 if(!data.message) return;
                 const p = JSON.parse(data.message);
                 totalPedidosGeral++;
+                
+                // LÓGICA DA SIRENE: Para se já estiver tocando e começa de novo para o novo pedido
+                sireneAlerta.pause();
+                sireneAlerta.currentTime = 0;
+                sireneAlerta.play().catch(error => console.log("Aguardando interação para tocar som."));
+
                 localStorage.setItem('vampirao_total', totalPedidosGeral);
-                new Audio('https://www.myinstants.com/media/sounds/whatsapp-notification.mp3').play();
                 const agora = new Date();
                 const dataFormatada = agora.toLocaleDateString('pt-BR') + " " + agora.toLocaleTimeString('pt-BR');
                 
@@ -208,34 +227,14 @@
                 
                 let servicoVindo = (p.serv || p.msg || "").toLowerCase();
                 let ehAutoSocorro = servicoVindo.includes("socorro");
-                let tipoServico = ehAutoSocorro ? "🚨 AUTO SOCORRO" : "🔋 TROCA DE BATERIA";
+                let tipoServico = ehAutoSocorro ? "🚨 AUTO SOCORRO" : "🔋 PEDIDO DE BATERIA";
                 let classeCabecalho = ehAutoSocorro ? "header-servico-destaque auto-socorro" : "header-servico-destaque";
 
-                // --- MENSAGEM DO WHATSAPP CONFORME SEU EXEMPLO ---
                 let msgZap = "";
                 if(ehAutoSocorro) {
-                    msgZap = `🚨 AUTO SOCORRO - CENTRAL DO SOCORRO 🚨\n\n` +
-                             `👤 CLIENTE: ${p.nome}\n` +
-                             `📧 E-MAIL: ${p.email || 'Não informado'}\n` +
-                             `📞 CONTATO: ${p.tel}\n` +
-                             `📍 ENDEREÇO: ${p.end}\n` +
-                             `🚗 VEÍCULO: ${p.veic}\n` +
-                             `📅 ANO: ${p.ano || 'Não informado'}\n` +
-                             `⚡ AMPERAGEM: ${p.amp}\n\n` +
-                             `🕒 HORA DO PEDIDO: ${dataFormatada}\n\n` +
-                             `📌 LEMBRETE: TAXA: R$ 60,00 (Até 5km)\n` +
-                             `OBS: Acima de 5km, taxa de deslocamento +5% do valor.`;
+                    msgZap = `🚨 AUTO SOCORRO - CENTRAL DO SOCORRO 🚨\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email || 'Não informado'}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano || 'Não informado'}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA DO PEDIDO: ${dataFormatada}\n\n📌 LEMBRETE: TAXA: R$ 60,00 (Até 5km)\nOBS: Acima de 5km, taxa de deslocamento +5% do valor.`;
                 } else {
-                    msgZap = `🔋 PEDIDO DE BATERIA - CENTRAL DO SOCORRO 🔋\n\n` +
-                             `👤 CLIENTE: ${p.nome}\n` +
-                             `📧 E-MAIL: ${p.email || 'Não informado'}\n` +
-                             `📞 CONTATO: ${p.tel}\n` +
-                             `📍 ENDEREÇO: ${p.end}\n` +
-                             `🚗 VEÍCULO: ${p.veic}\n` +
-                             `📅 ANO: ${p.ano || 'Não informado'}\n` +
-                             `⚡ AMPERAGEM: ${p.amp}\n\n` +
-                             `🕒 HORA DO PEDIDO: ${dataFormatada}\n\n` +
-                             `📌 LEMBRETE: Mandar orçamento da bateria para o cliente o mais rápido possível.`;
+                    msgZap = `🔋 PEDIDO DE BATERIA - CENTRAL DO SOCORRO 🔋\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email || 'Não informado'}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano || 'Não informado'}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA DO PEDIDO: ${dataFormatada}\n\n📌 LEMBRETE: Mandar orçamento da bateria para o cliente o mais rápido possível.`;
                 }
 
                 let botoesHtml = ''; let primeiroLink = "";
