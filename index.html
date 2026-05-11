@@ -184,14 +184,20 @@
             jaEnviou = true;
             const btn = document.getElementById('btn-finalizar');
             btn.innerText = "ENVIANDO..."; btn.disabled = true;
+            
+            // Adicionado campo 'servico' para identificar o Auto Socorro no painel
             const dados = {
-                vampirao_ios: "SISTEMA_BRUTO_V1", nome: nome, tel: tel,
+                vampirao_ios: "SISTEMA_BRUTO_V1", 
+                servico: document.getElementById('servico-tipo').value,
+                nome: nome, 
+                tel: tel,
                 email: document.getElementById('email').value, 
                 end: document.getElementById('endereco').value,
                 veic: document.getElementById('veiculo').value,
                 ano: document.getElementById('ano-veiculo').value,
                 amp: document.getElementById('amperagem').value
             };
+            
             fetch('https://ntfy.sh/central_socorro_vampirao_ios', {
                 method: 'POST', body: JSON.stringify(dados)
             }).then(() => {
