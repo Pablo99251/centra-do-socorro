@@ -7,13 +7,11 @@
         :root { --amarelo: #ffcc00; --preto: #000; --cinza: #1a1a1a; --verde: #25d366; --azul: #007bff; --vermelho: #ff4444; --laranja: #ff8800; }
         body { background: var(--preto); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
         
-        /* TELA DE LOGIN (BLOQUEIO INICIAL) */
         #tela-bloqueio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--preto); display: flex; justify-content: center; align-items: center; z-index: 2000; }
         .login-box { background: var(--cinza); padding: 30px; border-radius: 15px; border: 2px solid var(--amarelo); text-align: center; width: 300px; }
         .login-box input { width: 100%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; text-align: center; box-sizing: border-box; font-size: 1.1rem; }
         .btn-entrar { background: var(--amarelo); color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* CONTEÚDO DO PAINEL */
         #painel-conteudo { display: none; }
 
         .header-painel { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
@@ -47,6 +45,8 @@
         
         input { width: 100%; padding: 12px; margin-bottom: 10px; background: #000; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
         .label-config { color: var(--amarelo); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px; }
+
+        .btn-reset { background: var(--vermelho) !important; margin-top: 10px; border-radius: 8px; font-weight: bold; color: #fff; padding: 12px; width: 100%; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -90,20 +90,21 @@
             <div id="listaContatosConfig"></div>
             <button class="btn-zap" style="background:#444; width:100%; margin-bottom: 10px;" onclick="adicionarCampoContato()">+ Adicionar Número</button>
             <button class="btn-zap" style="width:100%" onclick="salvarConfig()">✅ SALVAR TUDO</button>
+
+            <hr style="border:1px solid #333; margin: 20px 0;">
+            <h3 style="color:var(--vermelho)">⚠️ Zona de Perigo</h3>
+            <button class="btn-reset" onclick="zerarTudo()">🚨 ZERAR PEDIDOS E CONTADOR</button>
         </div>
     </div>
 
     <script>
-        // Dados iniciais (Senha padrão: 123)
         let configAtendentes = JSON.parse(localStorage.getItem('vampirao_contatos')) || [{ nome: "PRINCIPAL", numero: "5511992512161" }];
         let configTempos = JSON.parse(localStorage.getItem('vampirao_tempos')) || { geral: 40, auto: 10, senha: "123" };
         let totalPedidosGeral = JSON.parse(localStorage.getItem('vampirao_total')) || 0;
         let bancoDeDados = JSON.parse(localStorage.getItem('vampirao_bd')) || [];
 
-        // FUNÇÃO DE LOGIN
         function fazerLogin() {
-            const senhaDigitada = document.getElementById('input-senha-login').value;
-            if (senhaDigitada === configTempos.senha) {
+            if (document.getElementById('input-senha-login').value === configTempos.senha) {
                 document.getElementById('tela-bloqueio').style.display = 'none';
                 document.getElementById('painel-conteudo').style.display = 'block';
                 conectarAoNtfy();
@@ -113,10 +114,7 @@
             }
         }
 
-        // Permitir dar Enter na senha
-        document.getElementById('input-senha-login').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') fazerLogin();
-        });
+        document.getElementById('input-senha-login').addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
 
         function fecharModais() { document.getElementById('modalConfig').style.display='none'; document.getElementById('overlay').style.display='none'; }
         
@@ -142,18 +140,27 @@
         function salvarConfig() { 
             configTempos.geral = parseInt(document.getElementById('cfgTempoGeral').value);
             configTempos.auto = parseInt(document.getElementById('cfgTempoAuto').value);
-            configTempos.senha = document.getElementById('cfgSenha').value; // Salva a nova senha
+            configTempos.senha = document.getElementById('cfgSenha').value;
             localStorage.setItem('vampirao_contatos', JSON.stringify(configAtendentes)); 
             localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
-            alert("Configurações salvas com sucesso!");
+            alert("Configurações salvas!");
             fecharModais(); 
         }
 
-        function marcarComoEnviado(btn) {
-            btn.classList.remove('btn-automatico');
-            btn.classList.add('btn-clicado');
-            btn.innerHTML = "✓ DIRECIONADO MANUAL";
+        // --- NOVA FUNÇÃO PARA ZERAR TUDO ---
+        function zerarTudo() {
+            if (confirm("ATENÇÃO: Isso vai apagar todos os pedidos da tela e o contador voltará para #1. Deseja continuar?")) {
+                totalPedidosGeral = 0;
+                bancoDeDados = [];
+                localStorage.setItem('vampirao_total', 0);
+                localStorage.setItem('vampirao_bd', JSON.stringify([]));
+                document.getElementById('lista').innerHTML = "Aguardando novos pedidos...";
+                alert("O sistema foi zerado! O próximo pedido será o número #1.");
+                fecharModais();
+            }
         }
+
+        function marcarComoEnviado(btn) { btn.classList.remove('btn-automatico'); btn.classList.add('btn-clicado'); btn.innerHTML = "✓ DIRECIONADO MANUAL"; }
 
         function exportarRelatorio() {
             if(bancoDeDados.length === 0) return alert("Nenhum dado no banco ainda!");
@@ -172,15 +179,15 @@
             let enviadoAuto = false;
             let intervalo = setInterval(() => {
                 let min = Math.floor(tempoGeral / 60); let seg = tempoGeral % 60;
-                elementoTimer.innerHTML = `⏳ LIMITE: ${min}:${seg < 10 ? '0' : ''}${seg} <span id="auto-status-${id}" class="status-auto">ATIVADO AUTOMÁTICO</span>`;
+                if(elementoTimer) elementoTimer.innerHTML = `⏳ LIMITE: ${min}:${seg < 10 ? '0' : ''}${seg} <span id="auto-status-${id}" class="status-auto">ATIVADO AUTOMÁTICO</span>`;
                 if (tempoGeral <= tempoParaAuto && !enviadoAuto) {
                     enviadoAuto = true;
                     if(document.getElementById(`auto-status-${id}`)) document.getElementById(`auto-status-${id}`).style.display = "inline";
                     card.querySelectorAll('.btn-zap').forEach(b => { if(!b.classList.contains('btn-clicado')) { b.classList.add('btn-automatico'); b.innerHTML = "⚡ ENVIADO AUTOMÁTICO"; } });
                     window.open(linkZap, '_blank');
                 }
-                if (tempoGeral <= 5 * 60) { card.style.borderColor = "var(--vermelho)"; elementoTimer.classList.add('urgente'); }
-                if (tempoGeral <= 0) { clearInterval(intervalo); elementoTimer.innerText = "❌ TEMPO EXCEDIDO!"; }
+                if (tempoGeral <= 5 * 60) { card.style.borderColor = "var(--vermelho)"; if(elementoTimer) elementoTimer.classList.add('urgente'); }
+                if (tempoGeral <= 0) { clearInterval(intervalo); if(elementoTimer) elementoTimer.innerText = "❌ TEMPO EXCEDIDO!"; }
                 tempoGeral--;
             }, 1000);
         }
