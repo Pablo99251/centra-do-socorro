@@ -40,21 +40,23 @@
 
         .footer { margin-top: 30px; padding: 20px; border-top: 1px solid #333; font-size: 0.9rem; color: #aaa; padding-bottom: 50px; line-height: 1.6; }
         
+        /* CORREÇÃO NA TELA DE SUCESSO */
         #tela-sucesso {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999; flex-direction: column; justify-content: flex-start; align-items: center;
-            padding: 20px; text-align: center; overflow-y: auto;
+            padding: 20px 10px; text-align: center; overflow-y: auto; box-sizing: border-box;
         }
         .sucesso-icone { font-size: 5rem; margin-top: 20px; color: var(--verde); }
-        .sucesso-texto { font-size: 1.8rem; font-weight: 900; color: var(--amarelo); margin-bottom: 10px; }
+        .sucesso-texto { font-size: 1.8rem; font-weight: 900; color: var(--amarelo); margin-bottom: 15px; }
+        
         .passo-a-passo {
             background: var(--cinza); border: 2px solid var(--amarelo);
             padding: 20px; border-radius: 15px; text-align: left;
-            max-width: 400px; width: 100%; box-sizing: border-box; margin-bottom: 20px;
+            max-width: 400px; width: 95%; box-sizing: border-box; margin: 0 auto 20px auto;
         }
-        .item-passo { margin-bottom: 15px; display: flex; gap: 12px; font-size: 1rem; line-height: 1.4; color: #fff; }
-        .numero { color: var(--amarelo); font-weight: 900; font-size: 1.1rem; }
-        .feedback-zap { color: var(--verde); font-weight: bold; font-size: 1.1rem; margin-top: 10px; }
+        .item-passo { margin-bottom: 15px; display: flex; gap: 12px; font-size: 1rem; line-height: 1.4; color: #fff; align-items: flex-start; }
+        .numero { color: var(--amarelo); font-weight: 900; font-size: 1.1rem; min-width: 20px; }
+        .feedback-zap { color: var(--verde); font-weight: bold; font-size: 1.1rem; margin-top: 10px; padding: 0 10px; }
     </style>
 </head>
 <body>
@@ -158,56 +160,4 @@
                 "Honda Biz 100", "Honda Biz 110i", "Honda Biz 125", "Honda CG 125", "Honda CG 150", "Honda CG 160", "Honda Fan 125", "Honda Fan 150", "Honda Fan 160", "Honda Titan 125", "Honda Titan 150", "Honda Titan 160", "Honda Start 160", "Honda Cargo 125", "Honda NXR Bros 125", "Honda NXR Bros 150", "Honda NXR Bros 160", "Honda Pop 100", "Honda Pop 110i", "Honda XRE 190", "Honda XRE 300", "Honda Sahara 350", "Honda Falcon 400", "Honda Twister 250", "Honda CB 300", "Honda CB 500", "Honda Hornet 600", "Honda CBR 600", "Honda CBR 1000", "Honda Shadow 600", "Honda Shadow 750", "Yamaha Factor 125", "Yamaha Factor 150", "Yamaha Fazer 150", "Yamaha Fazer 250", "Yamaha Lander 250", "Yamaha Crosser 150", "Yamaha XTZ 125", "Yamaha XTZ 150", "Yamaha XTZ 250", "Yamaha XT 600", "Yamaha XT 660", "Yamaha YBR 125", "Yamaha Crypton", "Yamaha Neo 125", "Yamaha NMax 160", "Yamaha MT-03", "Yamaha MT-07", "Yamaha R3", "Yamaha R1", "Suzuki Yes 125", "Suzuki Intruder 125", "Suzuki Intruder 250", "Suzuki Burgman 125", "Suzuki GS 500", "Suzuki Bandit 600", "Suzuki Bandit 1200", "Suzuki V-Strom 650", "Suzuki Hayabusa", "Kawasaki Ninja 250", "Kawasaki Ninja 300", "Kawasaki Ninja 400", "Kawasaki Ninja 650", "Kawasaki Ninja ZX-6R", "Kawasaki Z300", "Kawasaki Z400", "Kawasaki Z650", "Kawasaki Versys 300", "Kawasaki Versys 650", "Dafra Speed 150", "Dafra Kansas 150", "Dafra Next 250", "Dafra Horizon 150", "Dafra Citycom 300", "Shineray XY 50", "Shineray Jet 50", "Shineray Worker 125", "Shineray Phoenix 50", "Shineray Discover 250", "Traxx Star 50", "Traxx JL 110", "Traxx Sky 125", "Sundown Hunter 90", "Sundown Max 125", "Sundown Web 100", "Mobilete (Caloi Mobylette)", "Honda ML 125", "Honda Turuna 125", "Honda Today 125", "Yamaha DT 180", "Yamaha RX 125", "Yamaha RD 135", "Yamaha RD 350", "Agrale 27.5", "Agrale SXT 27.5", "Kasinski Comet 250", "Kasinski Mirage 250"
             ],
             caminhao: [
-                "VW Delivery 5.150", "VW Delivery 8.160", "VW Delivery 9.170", "VW Delivery 11.180", "VW Constellation 13.190", "VW Constellation 15.190", "VW Constellation 17.190", "VW Constellation 17.230", "VW Constellation 24.250", "VW Constellation 24.280", "VW Constellation 25.320", "VW Constellation 26.260", "VW Constellation 31.320", "VW Constellation 19.360", "VW Meteor 28.460", "VW Meteor 29.520", "VW 6.90", "VW 7.90", "VW 11.130", "VW 13.130", "VW 14.140", "VW 15.180", "Mercedes Accelo 815", "Mercedes Accelo 1016", "Mercedes Atego 1419", "Mercedes Atego 1719", "Mercedes Atego 2426", "Mercedes Atego 2430", "Mercedes Axor 1933", "Mercedes Axor 2544", "Mercedes Actros 2651", "Mercedes Actros 2546", "Mercedes Actros 2653", "Mercedes 608", "Mercedes 708", "Mercedes 1113", "Mercedes 1313", "Mercedes 1513", "Mercedes 1620", "Mercedes 1935", "Mercedes 1941", "Ford Cargo 816", "Ford Cargo 1119", "Ford Cargo 1319", "Ford Cargo 1519", "Ford Cargo 1719", "Ford Cargo 2429", "Ford Cargo 3133", "Ford F-4000", "Ford F-600", "Ford F-11000", "Volvo VM 270", "Volvo VM 330", "Volvo VM 360", "Volvo FH 440", "Volvo FH 460", "Volvo FH 500", "Volvo FH 540", "Volvo FM 370", "Volvo FM 410", "Volvo NL10", "Volvo NL12", "Volvo FH12", "Scania P 250", "Scania P 310", "Scania G 360", "Scania G 380", "Scania R 440", "Scania R 450", "Scania R 500", "Scania R 540", "Scania 111", "Scania 112", "Scania 113", "Scania 124", "Iveco Daily 35S14", "Iveco Daily 45S17", "Iveco Tector 9-190", "Iveco Tector 11-190", "Iveco Tector 17-280", "Iveco Tector 24-280", "Iveco Hi-Way 440", "Iveco Hi-Way 480", "Iveco Eurocargo", "Iveco Stralis", "DAF XF 105", "DAF XF 106", "DAF XF 480", "DAF XF 530", "DAF CF 410", "DAF CF 450", "Chevrolet D60", "Chevrolet D70", "Chevrolet D12000", "GMC 7110", "GMC 12170", "Agrale 8500", "Agrale 9200", "Agrale A10000"
-            ]
-        };
-
-        function atualizarModelos() {
-            const tipo = document.getElementById('tipo-veiculo').value;
-            const datalist = document.getElementById('lista-dinamica');
-            document.getElementById('veiculo').value = ""; datalist.innerHTML = "";
-            if (modelos[tipo]) {
-                modelos[tipo].forEach(mod => {
-                    const option = document.createElement('option');
-                    option.value = mod; datalist.appendChild(option);
-                });
-            }
-        }
-        window.onload = atualizarModelos;
-
-        let jaEnviou = false;
-        function enviarComando(event) {
-            if (jaEnviou) return;
-            const nome = document.getElementById('nome').value;
-            const tel = document.getElementById('telefone').value;
-            if(!nome || !tel) { alert("Preencha Nome e Telefone!"); return; }
-            jaEnviou = true;
-            const btn = document.getElementById('btn-finalizar');
-            btn.innerText = "ENVIANDO..."; btn.disabled = true;
-            
-            // Adicionado campo 'servico' para identificar o Auto Socorro no painel
-            const dados = {
-                vampirao_ios: "SISTEMA_BRUTO_V1", 
-                servico: document.getElementById('servico-tipo').value,
-                nome: nome, 
-                tel: tel,
-                email: document.getElementById('email').value, 
-                end: document.getElementById('endereco').value,
-                veic: document.getElementById('veiculo').value,
-                ano: document.getElementById('ano-veiculo').value,
-                amp: document.getElementById('amperagem').value
-            };
-            
-            fetch('https://ntfy.sh/central_socorro_vampirao_ios', {
-                method: 'POST', body: JSON.stringify(dados)
-            }).then(() => {
-                document.getElementById('conteudo-site').style.display = 'none';
-                document.getElementById('tela-sucesso').style.display = 'flex';
-            }).catch(() => {
-                alert("Erro de sinal. Tente novamente.");
-                jaEnviou = false; btn.disabled = false; btn.innerText = "FINALIZAR PEDIDO";
-            });
-        }
-    </script>
-</body>
-</html>
+                "VW Delivery 5.150", "VW Delivery 8.160", "VW Delivery 9.170", "VW Delivery 11.180", "VW Constellation 13.190", "VW Constellation 15.190", "VW Constellation 17.190", "VW Constellation 17.230", "VW Constellation 24.250", "VW Constellation 24.280", "VW Constellation 25.320", "VW Constellation 26.260", "VW Constellation 31.320", "VW Constellation 19.360", "VW Meteor 28.460", "VW Meteor 29.520", "VW 6.90", "VW 7.90", "VW 11.130", "VW 13.130", "VW 14.140", "VW 15.180", "Mercedes Accelo 815", "Mercedes Accelo 1016", "Mercedes Atego 1419", "Mercedes Atego 1719", "Mercedes Atego 2426", "Mercedes Atego 2430", "Mercedes Axor 1933", "Mercedes Axor 2544", "Mercedes Actros 2651", "Mercedes Actros 2546", "Mercedes Actros 2653", "Mercedes 608", "Mercedes 708", "Mercedes 1113", "Mercedes 1313", "Mercedes 1513", "Mercedes 1620", "Mercedes 1935", "Mercedes 1941", "Ford Cargo 816", "Ford Cargo 1119", "Ford Cargo 1319", "Ford Cargo 1519", "Ford Cargo 1719", "Ford Cargo 2429", "Ford Cargo 3133", "Ford F-4000", "Ford F-600", "Ford F-11000", "Volvo VM 270", "Volvo VM 330", "Volvo VM 360", "Volvo FH 440", "Volvo FH 460", "Volvo FH 500", "Volvo FH 540", "Volvo FM 370", "Volvo FM 410", "Volvo NL10", "Volvo NL12", "Volvo FH12", "Scania
