@@ -23,7 +23,6 @@
 
         .card-pedido { background: var(--cinza); border: 2px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 20px; border-left: 10px solid var(--amarelo); position: relative; }
         
-        /* CABEÇALHO DO SERVIÇO DESTACADO */
         .header-servico-destaque { 
             background: var(--amarelo); 
             color: #000; 
@@ -207,25 +206,36 @@
                 item.className = 'card-pedido';
                 item.id = `pedido-${totalPedidosGeral}`;
                 
-                // LÓGICA DE RECONHECIMENTO DE SERVIÇO
                 let servicoVindo = (p.serv || p.msg || "").toLowerCase();
                 let ehAutoSocorro = servicoVindo.includes("socorro");
                 let tipoServico = ehAutoSocorro ? "🚨 AUTO SOCORRO" : "🔋 TROCA DE BATERIA";
                 let classeCabecalho = ehAutoSocorro ? "header-servico-destaque auto-socorro" : "header-servico-destaque";
 
-                // MENSAGEM DO ZAP PERSONALIZADA
+                // --- MENSAGEM DO WHATSAPP CONFORME SEU EXEMPLO ---
                 let msgZap = "";
                 if(ehAutoSocorro) {
-                    msgZap = `*${tipoServico}* - CENTRAL DO SOCORRO\n\n` +
-                             `*TAXA:* R$ 60,00 (Até 5km)\n` +
-                             `*OBS:* Acima de 5km, taxa de deslocamento +5% do valor.\n\n` +
-                             `👤 *CLIENTE:* ${p.nome}\n` +
-                             `📞 *CONTATO:* ${p.tel}\n` +
-                             `📍 *ENDEREÇO:* ${p.end}\n` +
-                             `🚗 *VEÍCULO:* ${p.veic}\n` +
-                             `⚡ *AMPERAGEM:* ${p.amp}`;
+                    msgZap = `🚨 AUTO SOCORRO - CENTRAL DO SOCORRO 🚨\n\n` +
+                             `👤 CLIENTE: ${p.nome}\n` +
+                             `📧 E-MAIL: ${p.email || 'Não informado'}\n` +
+                             `📞 CONTATO: ${p.tel}\n` +
+                             `📍 ENDEREÇO: ${p.end}\n` +
+                             `🚗 VEÍCULO: ${p.veic}\n` +
+                             `📅 ANO: ${p.ano || 'Não informado'}\n` +
+                             `⚡ AMPERAGEM: ${p.amp}\n\n` +
+                             `🕒 HORA DO PEDIDO: ${dataFormatada}\n\n` +
+                             `📌 LEMBRETE: TAXA: R$ 60,00 (Até 5km)\n` +
+                             `OBS: Acima de 5km, taxa de deslocamento +5% do valor.`;
                 } else {
-                    msgZap = `*${tipoServico}* - CENTRAL DO SOCORRO\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📍 *ENDEREÇO:* ${p.end}\n🚗 *VEÍCULO:* ${p.veic}\n⚡ *AMPERAGEM:* ${p.amp}`;
+                    msgZap = `🔋 PEDIDO DE BATERIA - CENTRAL DO SOCORRO 🔋\n\n` +
+                             `👤 CLIENTE: ${p.nome}\n` +
+                             `📧 E-MAIL: ${p.email || 'Não informado'}\n` +
+                             `📞 CONTATO: ${p.tel}\n` +
+                             `📍 ENDEREÇO: ${p.end}\n` +
+                             `🚗 VEÍCULO: ${p.veic}\n` +
+                             `📅 ANO: ${p.ano || 'Não informado'}\n` +
+                             `⚡ AMPERAGEM: ${p.amp}\n\n` +
+                             `🕒 HORA DO PEDIDO: ${dataFormatada}\n\n` +
+                             `📌 LEMBRETE: Mandar orçamento da bateria para o cliente o mais rápido possível.`;
                 }
 
                 let botoesHtml = ''; let primeiroLink = "";
@@ -244,7 +254,7 @@
                         <div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div>
                         <div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>
                     </div>
-                    <div class="lembrete-bruto">⚠️ Mandar orçamento para o cliente o mais rápido possível.</div>
+                    <div class="lembrete-bruto">${ehAutoSocorro ? '⚠️ COBRAR TAXA DE R$ 60,00 ATÉ 5KM' : '⚠️ MANDAR ORÇAMENTO O MAIS RÁPIDO POSSÍVEL'}</div>
                     <div style="font-size:0.8rem; color:#888; margin-top:10px;">📅 Recebido em: ${dataFormatada}</div>
                     <div class="botoes-direcionar">${botoesHtml}</div>`;
 
