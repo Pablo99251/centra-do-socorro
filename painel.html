@@ -22,12 +22,25 @@
         .btn-relatorio { background: var(--azul); }
 
         .card-pedido { background: var(--cinza); border: 2px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 20px; border-left: 10px solid var(--amarelo); position: relative; }
-        .num-pedido { position: absolute; right: 20px; top: 20px; background: var(--amarelo); color: #000; font-weight: 900; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem; }
+        
+        /* CABEÇALHO DO SERVIÇO DESTACADO */
+        .header-servico-destaque { 
+            background: var(--amarelo); 
+            color: #000; 
+            margin: -20px -20px 15px -20px; 
+            padding: 10px; 
+            text-align: center; 
+            font-size: 1.4rem; 
+            font-weight: 900; 
+            border-radius: 12px 12px 0 0;
+            text-transform: uppercase;
+        }
+        .header-servico-destaque.auto-socorro { background: var(--laranja); color: #fff; }
+
+        .num-pedido { position: absolute; right: 20px; top: 60px; background: #000; color: var(--amarelo); border: 1px solid var(--amarelo); font-weight: 900; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; }
         
         .timer-container { color: var(--vermelho); font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
         .status-auto { background: var(--laranja); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; display: none; }
-        .urgente { animation: piscar 0.5s infinite; }
-        @keyframes piscar { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; }
         .info-item { font-size: 0.9rem; border-bottom: 1px solid #333; padding-bottom: 5px; color: #fff; }
@@ -194,18 +207,35 @@
                 item.className = 'card-pedido';
                 item.id = `pedido-${totalPedidosGeral}`;
                 
-                // AJUSTE PARA RECONHECER O SERVIÇO DO SITE
-                const tipoServico = (p.serv === "Auto Socorro") ? "🚨 AUTO SOCORRO" : "🔋 TROCA DE BATERIA";
-                
-                let msgZap = `*${tipoServico}* - CENTRAL DO SOCORRO\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📍 *ENDEREÇO:* ${p.end}\n🚗 *VEÍCULO:* ${p.veic}\n⚡ *AMPERAGEM:* ${p.amp}`;
+                // LÓGICA DE RECONHECIMENTO DE SERVIÇO
+                let servicoVindo = (p.serv || p.msg || "").toLowerCase();
+                let ehAutoSocorro = servicoVindo.includes("socorro");
+                let tipoServico = ehAutoSocorro ? "🚨 AUTO SOCORRO" : "🔋 TROCA DE BATERIA";
+                let classeCabecalho = ehAutoSocorro ? "header-servico-destaque auto-socorro" : "header-servico-destaque";
+
+                // MENSAGEM DO ZAP PERSONALIZADA
+                let msgZap = "";
+                if(ehAutoSocorro) {
+                    msgZap = `*${tipoServico}* - CENTRAL DO SOCORRO\n\n` +
+                             `*TAXA:* R$ 60,00 (Até 5km)\n` +
+                             `*OBS:* Acima de 5km, taxa de deslocamento +5% do valor.\n\n` +
+                             `👤 *CLIENTE:* ${p.nome}\n` +
+                             `📞 *CONTATO:* ${p.tel}\n` +
+                             `📍 *ENDEREÇO:* ${p.end}\n` +
+                             `🚗 *VEÍCULO:* ${p.veic}\n` +
+                             `⚡ *AMPERAGEM:* ${p.amp}`;
+                } else {
+                    msgZap = `*${tipoServico}* - CENTRAL DO SOCORRO\n👤 *CLIENTE:* ${p.nome}\n📞 *CONTATO:* ${p.tel}\n📍 *ENDEREÇO:* ${p.end}\n🚗 *VEÍCULO:* ${p.veic}\n⚡ *AMPERAGEM:* ${p.amp}`;
+                }
+
                 let botoesHtml = ''; let primeiroLink = "";
                 configAtendentes.forEach((c, index) => { if(c.numero) { let link = `https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}`; if(index === 0) primeiroLink = link; botoesHtml += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="${link}" target="_blank">ENVIAR PARA ${c.nome}</a>`; } });
 
                 item.innerHTML = `
+                    <div class="${classeCabecalho}">${tipoServico}</div>
                     <div class="num-pedido">#${totalPedidosGeral}</div>
                     <div class="timer-container" id="timer-${totalPedidosGeral}">⏳ LIMITE: ${configTempos.geral}:00</div>
                     <div class="info-grid">
-                        <div class="info-item"><b>SERVIÇO:</b> ${tipoServico}</div>
                         <div class="info-item"><b>CLIENTE:</b> ${p.nome}</div>
                         <div class="info-item"><b>TEL:</b> ${p.tel}</div>
                         <div class="info-item"><b>E-MAIL:</b> ${p.email || 'Não informado'}</div>
