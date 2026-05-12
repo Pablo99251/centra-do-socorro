@@ -44,6 +44,7 @@
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; }
         .info-item { font-size: 0.9rem; border-bottom: 1px solid #333; padding-bottom: 5px; color: #fff; }
         .info-item b { color: var(--amarelo); text-transform: uppercase; }
+        .chegada-texto { font-size: 0.7rem; color: #aaa; display: block; margin-top: 2px; text-transform: none; }
 
         .lembrete-bruto { background: #330000; border: 1px dashed var(--vermelho); color: #ff9999; padding: 10px; border-radius: 8px; margin-top: 15px; font-size: 0.85rem; font-weight: bold; text-align: center; text-transform: uppercase; }
         
@@ -56,7 +57,7 @@
         #modalConfig { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 25px; border-radius: 15px; border: 2px solid var(--amarelo); z-index: 100; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 90; }
         
-        input, select { width: 100%; padding: 12px; margin-bottom: 10px; background: #000; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; background: #000; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
         .label-config { color: var(--amarelo); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px; }
 
         .btn-reset { background: var(--vermelho) !important; margin-top: 10px; border-radius: 8px; font-weight: bold; color: #fff; padding: 12px; width: 100%; border: none; cursor: pointer; }
@@ -103,11 +104,7 @@
         <div class="filtros-busca">
             <div><span class="label-config">Período:</span>
                 <select id="filtro-tempo" onchange="gerarRelatorioInterno()">
-                    <option value="hoje">Hoje</option>
-                    <option value="semana">Esta Semana</option>
-                    <option value="mes">Este Mês</option>
-                    <option value="ano">Este Ano</option>
-                    <option value="tudo">Histórico Total</option>
+                    <option value="hoje">Hoje</option><option value="semana">Esta Semana</option><option value="mes">Este Mês</option><option value="ano">Este Ano</option><option value="tudo">Histórico Total</option>
                 </select>
             </div>
             <div><span class="label-config">Filtrar DDD/Tel:</span><input type="text" id="busca-tel" placeholder="Ex: 11..." oninput="gerarRelatorioInterno()"></div>
@@ -115,21 +112,9 @@
             <div><span class="label-config">Filtrar Região:</span><input type="text" id="busca-end" placeholder="Ex: Vicente de Paulo..." oninput="gerarRelatorioInterno()"></div>
             <div><span class="label-config">Filtrar Amperagem:</span><input type="text" id="busca-amp" placeholder="Ex: 60Ah..." oninput="gerarRelatorioInterno()"></div>
         </div>
-
         <div class="resumo-vendas" id="resumo-vendas"></div>
-
         <table class="tabela-relatorio">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Data</th>
-                    <th>Cliente</th>
-                    <th>Telefone</th>
-                    <th>Veículo</th>
-                    <th>Região/Endereço</th>
-                    <th>Amperagem</th>
-                </tr>
-            </thead>
+            <thead><tr><th>ID</th><th>Data</th><th>Cliente</th><th>Telefone</th><th>Veículo</th><th>Região/Endereço</th><th>Amperagem</th></tr></thead>
             <tbody id="corpo-relatorio"></tbody>
         </table>
         <div class="footer-relatorio" id="footer-relatorio">TOTAL DE ATENDIMENTOS NO PERÍODO: 0</div>
@@ -143,9 +128,7 @@
                 <button class="btn-acao" onclick="abrirConfig()">⚙️ CONFIGS</button>
             </div>
         </div>
-        
         <div id="lista">Aguardando novos pedidos...</div>
-
         <div class="overlay" id="overlay" onclick="fecharModais()"></div>
         
         <div id="modalConfig">
@@ -155,14 +138,14 @@
             <span class="label-config">Disparo Automático após (Minutos):</span>
             <input type="number" id="cfgTempoAuto">
             <span class="label-config">🔐 Senha Sincronizada (PC/Celular):</span>
-            <input type="text" id="cfgSenha" placeholder="Nova senha">
+            <input type="text" id="cfgSenha">
+            <span class="label-config">📝 Rodapé da Guia do Técnico:</span>
+            <textarea id="cfgTextoGuia" rows="2" placeholder="Ex: Obrigado pela preferência!"></textarea>
             <hr style="border:1px solid #333; margin: 20px 0;">
             <h3 style="color:var(--amarelo)">📱 Atendentes WhatsApp</h3>
             <div id="listaContatosConfig"></div>
             <button class="btn-zap" style="background:#444; width:100%; margin-bottom: 10px;" onclick="adicionarCampoContato()">+ Adicionar Número</button>
             <button class="btn-zap" style="width:100%" onclick="salvarConfig()">✅ SALVAR TUDO</button>
-            <hr style="border:1px solid #333; margin: 20px 0;">
-            <h3 style="color:var(--vermelho)">⚠️ Zona de Perigo</h3>
             <button class="btn-reset" onclick="zerarTudo()">🚨 ZERAR PEDIDOS E CONTADOR</button>
         </div>
     </div>
@@ -170,7 +153,7 @@
     <script>
         const sireneAlerta = new Audio('https://www.soundjay.com/buttons/sounds/alarm-clock-01.mp3');
         let configAtendentes = JSON.parse(localStorage.getItem('vampirao_contatos')) || [{ nome: "PRINCIPAL", numero: "5511992512161" }];
-        let configTempos = JSON.parse(localStorage.getItem('vampirao_tempos')) || { geral: 40, auto: 10, senha: "123" };
+        let configTempos = JSON.parse(localStorage.getItem('vampirao_tempos')) || { geral: 40, auto: 10, senha: "123", textoGuia: "vampirao.adm" };
         let totalPedidosGeral = JSON.parse(localStorage.getItem('vampirao_total')) || 0;
         let bancoDeDados = JSON.parse(localStorage.getItem('vampirao_bd')) || [];
 
@@ -197,7 +180,7 @@
                 carregarPedidosLocais();
                 await buscarHistoricoNtfy();
                 conectarAoNtfy();
-            } else { alert("Senha Incorreta!"); document.getElementById('input-senha-login').value = ""; }
+            } else { alert("Senha Incorreta!"); }
         }
 
         function abrirRelatorio() { document.getElementById('sessao-relatorio').style.display = 'block'; gerarRelatorioInterno(); }
@@ -209,28 +192,23 @@
             const janela = window.open('', '', 'width=400,height=600');
             janela.document.write(`
                 <html><head><style>
-                    body { font-family: 'Courier New', monospace; width: 280px; padding: 10px; margin: 0; font-size: 14px; }
-                    .center { text-align: center; }
-                    .bold { font-weight: bold; font-size: 16px; }
-                    .border { border-bottom: 1px dashed #000; margin: 8px 0; }
+                    body { font-family: 'Courier New', monospace; width: 260px; padding: 5px; margin: 0; font-size: 13px; }
+                    .center { text-align: center; } .bold { font-weight: bold; font-size: 15px; }
+                    .border { border-bottom: 1px dashed #000; margin: 5px 0; }
                 </style></head><body>
-                    <div class="center bold">CENTRAL DO SOCORRO</div>
-                    <div class="center">${servico}</div>
+                    <div class="center bold">CENTRAL DO SOCORRO</div><div class="center">${servico}</div>
                     <div class="border"></div>
-                    <div><b>PEDIDO:</b> #${p.id}</div>
-                    <div><b>CHEGADA:</b> ${p.data}</div>
+                    <div><b>PEDIDO:</b> #${p.id}</div><div><b>DATA:</b> ${p.data}</div>
                     <div class="border"></div>
-                    <div><b>CLIENTE:</b> ${p.nome}</div>
-                    <div><b>TEL:</b> ${p.tel}</div>
+                    <div><b>CLIENTE:</b> ${p.nome}</div><div><b>TEL:</b> ${p.tel}</div>
                     <div class="border"></div>
                     <div><b>ENDERECO:</b><br>${p.end}</div>
                     <div class="border"></div>
-                    <div><b>VEICULO:</b> ${p.veic}</div>
-                    <div><b>ANO:</b> ${p.ano || '---'}</div>
-                    <div><b>BATERIA:</b> ${p.amp}</div>
+                    <div><b>VEICULO:</b> ${p.veic}</div><div><b>ANO:</b> ${p.ano || '---'}</div><div><b>BATERIA:</b> ${p.amp}</div>
                     <div class="border"></div>
                     <div class="center bold">${(p.serv || "").toLowerCase().includes("socorro") ? 'COBRAR R$ 60,00' : 'TROCA / ORÇAMENTO'}</div>
                     <div class="border"></div>
+                    <div class="center" style="font-size:10px;">${configTempos.textoGuia}</div>
                 </body></html>
             `);
             janela.document.close(); janela.focus(); janela.print(); janela.close();
@@ -242,8 +220,7 @@
             const bVeic = document.getElementById('busca-veic').value.toLowerCase();
             const bEnd = document.getElementById('busca-end').value.toLowerCase();
             const bAmp = document.getElementById('busca-amp').value.toLowerCase();
-            const corpo = document.getElementById('corpo-relatorio');
-            corpo.innerHTML = "";
+            const corpo = document.getElementById('corpo-relatorio'); corpo.innerHTML = "";
             const agora = new Date();
             let contadorFinal = 0; let contagemVeic = {}; let contagemAmp = {};
             bancoDeDados.forEach(p => {
@@ -296,46 +273,23 @@
             let serv = (p.serv || p.msg || "").toLowerCase();
             let ehAuto = serv.includes("socorro");
             let msgZap = ehAuto ? `🚨 AUTO SOCORRO - CENTRAL DO SOCORRO 🚨\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email || 'Não informado'}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano || 'Não informado'}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA DO PEDIDO: ${p.data}\n\n📌 LEMBRETE: TAXA: R$ 60,00 (Até 5km)\nOBS: Acima de 5km, taxa de deslocamento +5% do valor.` : `🔋 PEDIDO DE BATERIA - CENTRAL DO SOCORRO 🔋\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email || 'Não informado'}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano || 'Não informado'}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA DO PEDIDO: ${p.data}\n\n📌 LEMBRETE: Mandar orçamento da bateria para o cliente o mais rápido possível.`;
-
+            
             let bots = `<button class="btn-zap btn-guia" onclick="imprimirGuiaTecnico(${p.id})">🎫 GUIA DO TÉCNICO</button>`; 
             let pLink = "";
             configAtendentes.forEach((c, i) => { if(c.numero){ let l = `https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}`; if(i==0)pLink=l; bots += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="${l}" target="_blank">ENVIAR PARA ${c.nome}</a>`; } });
             
-            item.innerHTML = `
-                <div class="${ehAuto ? 'header-servico-destaque auto-socorro' : 'header-servico-destaque'}">${ehAuto ? '🚨 AUTO SOCORRO' : '🔋 TROCA DE BATERIA'}</div>
-                <div class="num-pedido">#${p.id}</div>
-                <div class="timer-container" id="timer-${p.id}">⏳ LIMITE: ${configTempos.geral}:00</div>
-                <div class="info-grid">
-                    <div class="info-item"><b>CLIENTE:</b> ${p.nome}</div>
-                    <div class="info-item"><b>🕒 CHEGADA:</b> ${p.data}</div>
-                    <div class="info-item"><b>TEL:</b> ${p.tel}</div>
-                    <div class="info-item"><b>E-MAIL:</b> ${p.email || 'Não informado'}</div>
-                    <div class="info-item"><b>VEÍCULO:</b> ${p.veic}</div>
-                    <div class="info-item"><b>ANO:</b> ${p.ano || 'Não informado'}</div>
-                    <div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div>
-                    <div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>
-                </div>
-                <div class="lembrete-bruto">${ehAuto ? '⚠️ COBRAR TAXA DE R$ 60,00 ATÉ 5KM' : '⚠️ MANDAR ORÇAMENTO O MAIS RÁPIDO POSSÍVEL'}</div>
-                <div class="botoes-direcionar">${bots}</div>`;
-            
-            const lista = document.getElementById('lista');
-            if(lista.innerHTML.includes("Aguardando")) lista.innerHTML = "";
-            lista.prepend(item);
+            item.innerHTML = `<div class="${ehAuto ? 'header-servico-destaque auto-socorro' : 'header-servico-destaque'}">${ehAuto ? '🚨 AUTO SOCORRO' : '🔋 TROCA DE BATERIA'}</div><div class="num-pedido">#${p.id}</div><div class="timer-container" id="timer-${p.id}">⏳ LIMITE: ${configTempos.geral}:00</div><div class="info-grid"><div class="info-item"><b>CLIENTE:</b> ${p.nome} <span class="chegada-texto">chegada: ${p.data}</span></div><div class="info-item"><b>TEL:</b> ${p.tel}</div><div class="info-item"><b>E-MAIL:</b> ${p.email || 'Não informado'}</div><div class="info-item"><b>VEÍCULO:</b> ${p.veic}</div><div class="info-item"><b>ANO:</b> ${p.ano || 'Não informado'}</div><div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div><div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div></div><div class="lembrete-bruto">${ehAuto ? '⚠️ COBRAR TAXA DE R$ 60,00 ATÉ 5KM' : '⚠️ MANDAR ORÇAMENTO O MAIS RÁPIDO POSSÍVEL'}</div><div class="botoes-direcionar">${bots}</div>`;
+            const lista = document.getElementById('lista'); if(lista.innerHTML.includes("Aguardando")) lista.innerHTML = ""; lista.prepend(item);
             iniciarTimer(p.id, document.getElementById(`timer-${p.id}`), item, pLink);
         }
 
         function conectarAoNtfy() {
             const source = new EventSource('https://ntfy.sh/central_socorro_vampirao_ios/sse');
             source.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                if(!data.message) return;
-                const p = JSON.parse(data.message);
-                if(bancoDeDados.some(i => i.data_id === data.id)) return;
-                totalPedidosGeral++;
-                const novo = { ...p, id: totalPedidosGeral, data: new Date().toLocaleString('pt-BR'), data_id: data.id, timestamp: Date.now() };
-                bancoDeDados.push(novo);
-                localStorage.setItem('vampirao_bd', JSON.stringify(bancoDeDados));
-                renderizarCard(novo, true);
+                const data = JSON.parse(e.data); if(!data.message) return;
+                const p = JSON.parse(data.message); if(bancoDeDados.some(i => i.data_id === data.id)) return;
+                totalPedidosGeral++; const novo = { ...p, id: totalPedidosGeral, data: new Date().toLocaleString('pt-BR'), data_id: data.id, timestamp: Date.now() };
+                bancoDeDados.push(novo); localStorage.setItem('vampirao_bd', JSON.stringify(bancoDeDados)); renderizarCard(novo, true);
             };
         }
 
@@ -343,8 +297,7 @@
         function carregarPedidosLocais() { if(bancoDeDados.length > 0) { document.getElementById('lista').innerHTML = ""; [...bancoDeDados].reverse().forEach(p => renderizarCard(p, false)); } }
 
         function iniciarTimer(id, elementoTimer, card, linkZap) {
-            let tempoGeral = configTempos.geral * 60; 
-            let tempoParaAuto = (configTempos.geral - configTempos.auto) * 60;
+            let tempoGeral = configTempos.geral * 60; let tempoParaAuto = (configTempos.geral - configTempos.auto) * 60;
             let enviadoAuto = false;
             let intervalo = setInterval(() => {
                 let min = Math.floor(tempoGeral / 60); let seg = tempoGeral % 60;
@@ -354,8 +307,7 @@
                     card.querySelectorAll('.btn-zap').forEach(b => { if(!b.classList.contains('btn-clicado') && !b.classList.contains('btn-guia')) { b.classList.add('btn-automatico'); b.innerHTML = "⚡ AUTO"; } });
                     window.open(linkZap, '_blank');
                 }
-                if (tempoGeral <= 0) clearInterval(intervalo);
-                tempoGeral--;
+                if (tempoGeral <= 0) clearInterval(intervalo); tempoGeral--;
             }, 1000);
         }
 
@@ -364,11 +316,11 @@
             document.getElementById('cfgTempoGeral').value = configTempos.geral;
             document.getElementById('cfgTempoAuto').value = configTempos.auto;
             document.getElementById('cfgSenha').value = configTempos.senha;
+            document.getElementById('cfgTextoGuia').value = configTempos.textoGuia || "vampirao.adm";
             renderizarCamposConfig(); 
         }
         function renderizarCamposConfig() {
-            const container = document.getElementById('listaContatosConfig');
-            container.innerHTML = '';
+            const container = document.getElementById('listaContatosConfig'); container.innerHTML = '';
             configAtendentes.forEach((contato, index) => {
                 container.innerHTML += `<div style="display:flex; gap:5px;"><input type="text" placeholder="Nome" value="${contato.nome}" onchange="configAtendentes[${index}].nome=this.value"><input type="text" placeholder="5511..." value="${contato.numero}" onchange="configAtendentes[${index}].numero=this.value"></div>`;
             });
@@ -377,14 +329,11 @@
         async function salvarConfig() { 
             configTempos.geral = parseInt(document.getElementById('cfgTempoGeral').value);
             configTempos.auto = parseInt(document.getElementById('cfgTempoAuto').value);
+            configTempos.textoGuia = document.getElementById('cfgTextoGuia').value;
             let nSenha = document.getElementById('cfgSenha').value;
-            if(nSenha !== configTempos.senha) {
-                await fetch('https://ntfy.sh/central_vampirao_seguranca', { method: 'POST', body: nSenha });
-                configTempos.senha = nSenha;
-            }
-            localStorage.setItem('vampirao_contatos', JSON.stringify(configAtendentes)); 
-            localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
-            alert("Salvo e Sincronizado!"); fecharModais(); 
+            if(nSenha !== configTempos.senha) { await fetch('https://ntfy.sh/central_vampirao_seguranca', { method: 'POST', body: nSenha }); configTempos.senha = nSenha; }
+            localStorage.setItem('vampirao_contatos', JSON.stringify(configAtendentes)); localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
+            alert("Salvo!"); fecharModais(); 
         }
         function zerarTudo() { if (confirm("ZERAR TUDO?")) { localStorage.clear(); location.reload(); } }
         function fecharModais() { document.getElementById('modalConfig').style.display='none'; document.getElementById('overlay').style.display='none'; }
