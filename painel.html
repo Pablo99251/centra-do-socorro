@@ -157,22 +157,27 @@
         let totalPedidosGeral = JSON.parse(localStorage.getItem('vampirao_total')) || 0;
         let bancoDeDados = JSON.parse(localStorage.getItem('vampirao_bd')) || [];
 
+        // FUNÇÃO DE SEGURANÇA CORRIGIDA - BUSCA SEMPRE A SENHA MAIS NOVA
         async function sincronizarSenha() {
             try {
-                const res = await fetch('https://ntfy.sh/central_vampirao_seguranca/json?poll=1&since=24h');
+                // Poll=1 traz o último valor publicado no canal de segurança
+                const res = await fetch('https://ntfy.sh/central_vampirao_seguranca/json?poll=1');
                 const texto = await res.text();
                 const linhas = texto.trim().split('\n');
-                if(linhas.length > 0 && linhas[0] !== "") {
+                if(linhas.length > 0 && linhas[linhas.length-1] !== "") {
                     const ultima = JSON.parse(linhas[linhas.length - 1]);
-                    configTempos.senha = ultima.message;
-                    localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
-                    document.getElementById('status-sync').innerText = "Segurança Sincronizada ✓";
+                    if(ultima.message) {
+                        configTempos.senha = ultima.message;
+                        localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
+                        document.getElementById('status-sync').innerText = "Segurança Sincronizada ✓";
+                    }
                 }
             } catch(e) { document.getElementById('status-sync').innerText = "Modo Local Ativo"; }
         }
-        sincronizarSenha();
+        sincronizarSenha(); // Roda ao carregar
 
         async function fazerLogin() {
+            await sincronizarSenha(); // Força atualização da senha antes de validar
             if (document.getElementById('input-senha-login').value === configTempos.senha) {
                 document.getElementById('tela-bloqueio').style.display = 'none';
                 document.getElementById('painel-conteudo').style.display = 'block';
@@ -190,27 +195,7 @@
             const p = bancoDeDados.find(item => item.id == id);
             const servico = (p.serv || p.msg || "").toLowerCase().includes("socorro") ? "🚨 AUTO SOCORRO" : "🔋 TROCA DE BATERIA";
             const janela = window.open('', '', 'width=400,height=600');
-            janela.document.write(`
-                <html><head><style>
-                    body { font-family: 'Courier New', monospace; width: 260px; padding: 5px; margin: 0; font-size: 13px; }
-                    .center { text-align: center; } .bold { font-weight: bold; font-size: 15px; }
-                    .border { border-bottom: 1px dashed #000; margin: 5px 0; }
-                </style></head><body>
-                    <div class="center bold">CENTRAL DO SOCORRO</div><div class="center">${servico}</div>
-                    <div class="border"></div>
-                    <div><b>PEDIDO:</b> #${p.id}</div><div><b>DATA:</b> ${p.data}</div>
-                    <div class="border"></div>
-                    <div><b>CLIENTE:</b> ${p.nome}</div><div><b>TEL:</b> ${p.tel}</div>
-                    <div class="border"></div>
-                    <div><b>ENDERECO:</b><br>${p.end}</div>
-                    <div class="border"></div>
-                    <div><b>VEICULO:</b> ${p.veic}</div><div><b>ANO:</b> ${p.ano || '---'}</div><div><b>BATERIA:</b> ${p.amp}</div>
-                    <div class="border"></div>
-                    <div class="center bold">${(p.serv || "").toLowerCase().includes("socorro") ? 'COBRAR R$ 60,00' : 'TROCA / ORÇAMENTO'}</div>
-                    <div class="border"></div>
-                    <div class="center" style="font-size:10px;">${configTempos.textoGuia}</div>
-                </body></html>
-            `);
+            janela.document.write(`<html><head><style>body { font-family: 'Courier New', monospace; width: 260px; padding: 5px; margin: 0; font-size: 13px; } .center { text-align: center; } .bold { font-weight: bold; font-size: 15px; } .border { border-bottom: 1px dashed #000; margin: 5px 0; }</style></head><body><div class="center bold">CENTRAL DO SOCORRO</div><div class="center">${servico}</div><div class="border"></div><div><b>PEDIDO:</b> #${p.id}</div><div><b>DATA:</b> ${p.data}</div><div class="border"></div><div><b>CLIENTE:</b> ${p.nome}</div><div><b>TEL:</b> ${p.tel}</div><div class="border"></div><div><b>ENDERECO:</b><br>${p.end}</div><div class="border"></div><div><b>VEICULO:</b> ${p.veic}</div><div><b>ANO:</b> ${p.ano || '---'}</div><div><b>BATERIA:</b> ${p.amp}</div><div class="border"></div><div class="center bold">${(p.serv || "").toLowerCase().includes("socorro") ? 'COBRAR R$ 60,00' : 'TROCA / ORÇAMENTO'}</div><div class="border"></div><div class="center" style="font-size:10px;">${configTempos.textoGuia}</div></body></html>`);
             janela.document.close(); janela.focus(); janela.print(); janela.close();
         }
 
@@ -246,22 +231,25 @@
 
         async function buscarHistoricoNtfy() {
             try {
-                const res = await fetch('https://ntfy.sh/central_socorro_vampirao_ios/json?poll=1&since=24h');
+                const res = await fetch('https://ntfy.sh/central_socorro_vampirao_ios/json?poll=1');
                 const texto = await res.text();
                 const linhas = texto.trim().split('\n');
                 linhas.forEach(l => {
                     const obj = JSON.parse(l);
                     if(obj.message) {
-                        const p = JSON.parse(obj.message);
-                        if(!bancoDeDados.some(i => i.data_id === obj.id)) {
-                            totalPedidosGeral++;
-                            const novo = { ...p, id: totalPedidosGeral, data: new Date(obj.time*1000).toLocaleString('pt-BR'), data_id: obj.id, timestamp: obj.time*1000 };
-                            bancoDeDados.push(novo);
-                            renderizarCard(novo, false);
-                        }
+                        try {
+                            const p = JSON.parse(obj.message);
+                            if(!bancoDeDados.some(i => i.data_id === obj.id)) {
+                                totalPedidosGeral++;
+                                const novo = { ...p, id: totalPedidosGeral, data: new Date(obj.time*1000).toLocaleString('pt-BR'), data_id: obj.id, timestamp: obj.time*1000 };
+                                bancoDeDados.push(novo);
+                                renderizarCard(novo, false);
+                            }
+                        } catch(e){}
                     }
                 });
                 localStorage.setItem('vampirao_bd', JSON.stringify(bancoDeDados));
+                localStorage.setItem('vampirao_total', totalPedidosGeral);
             } catch(e) {}
         }
 
@@ -283,13 +271,25 @@
             iniciarTimer(p.id, document.getElementById(`timer-${p.id}`), item, pLink);
         }
 
+        // SISTEMA DE ATUALIZAÇÃO CORRIGIDO (AUTO-RECONECTA)
         function conectarAoNtfy() {
             const source = new EventSource('https://ntfy.sh/central_socorro_vampirao_ios/sse');
             source.onmessage = (e) => {
                 const data = JSON.parse(e.data); if(!data.message) return;
-                const p = JSON.parse(data.message); if(bancoDeDados.some(i => i.data_id === data.id)) return;
-                totalPedidosGeral++; const novo = { ...p, id: totalPedidosGeral, data: new Date().toLocaleString('pt-BR'), data_id: data.id, timestamp: Date.now() };
-                bancoDeDados.push(novo); localStorage.setItem('vampirao_bd', JSON.stringify(bancoDeDados)); renderizarCard(novo, true);
+                try {
+                    const p = JSON.parse(data.message);
+                    if(bancoDeDados.some(i => i.data_id === data.id)) return;
+                    totalPedidosGeral++;
+                    const novo = { ...p, id: totalPedidosGeral, data: new Date().toLocaleString('pt-BR'), data_id: data.id, timestamp: Date.now() };
+                    bancoDeDados.push(novo);
+                    localStorage.setItem('vampirao_bd', JSON.stringify(bancoDeDados));
+                    localStorage.setItem('vampirao_total', totalPedidosGeral);
+                    renderizarCard(novo, true);
+                } catch(e){}
+            };
+            source.onerror = () => { 
+                source.close(); 
+                setTimeout(conectarAoNtfy, 5000); // Tenta reconectar se cair a internet no celular
             };
         }
 
@@ -331,11 +331,18 @@
             configTempos.auto = parseInt(document.getElementById('cfgTempoAuto').value);
             configTempos.textoGuia = document.getElementById('cfgTextoGuia').value;
             let nSenha = document.getElementById('cfgSenha').value;
-            if(nSenha !== configTempos.senha) { await fetch('https://ntfy.sh/central_vampirao_seguranca', { method: 'POST', body: nSenha }); configTempos.senha = nSenha; }
-            localStorage.setItem('vampirao_contatos', JSON.stringify(configAtendentes)); localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
-            alert("Salvo!"); fecharModais(); 
+            
+            // Publica a senha nova no servidor para todos os aparelhos verem
+            if(nSenha !== configTempos.senha) { 
+                await fetch('https://ntfy.sh/central_vampirao_seguranca', { method: 'POST', body: nSenha }); 
+                configTempos.senha = nSenha; 
+            }
+            
+            localStorage.setItem('vampirao_contatos', JSON.stringify(configAtendentes)); 
+            localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
+            alert("Configurações Salvas e Sincronizadas!"); fecharModais(); 
         }
-        function zerarTudo() { if (confirm("ZERAR TUDO?")) { localStorage.clear(); location.reload(); } }
+        function zerarTudo() { if (confirm("ZERAR TUDO? Isso apaga o histórico!")) { localStorage.clear(); location.reload(); } }
         function fecharModais() { document.getElementById('modalConfig').style.display='none'; document.getElementById('overlay').style.display='none'; }
         document.getElementById('input-senha-login').addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
     </script>
