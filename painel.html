@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>CENTRAL ADM DO SOCORRO</title>
+    <title>CENTRAL DO SOCORRO - PAINEL ADM</title>
     <style>
         :root { --amarelo: #ffcc00; --preto: #000; --cinza: #1a1a1a; --verde: #25d366; --azul: #007bff; --vermelho: #ff4444; --laranja: #ff8800; }
         body { background: var(--preto); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
@@ -104,7 +104,6 @@
     </div>
 
     <script>
-        // CONFIGURAÇÃO GLOBAL DA SIRENE
         const sireneAlerta = new Audio('https://www.soundjay.com/buttons/sounds/alarm-clock-01.mp3');
         sireneAlerta.volume = 1.0;
 
@@ -113,74 +112,123 @@
         let totalPedidosGeral = JSON.parse(localStorage.getItem('vampirao_total')) || 0;
         let bancoDeDados = JSON.parse(localStorage.getItem('vampirao_bd')) || [];
 
-        function fazerLogin() {
+        async function fazerLogin() {
             if (document.getElementById('input-senha-login').value === configTempos.senha) {
                 document.getElementById('tela-bloqueio').style.display = 'none';
                 document.getElementById('painel-conteudo').style.display = 'block';
-                // Toca e pausa o áudio no login para "desbloquear" o som no navegador
+                // Libera áudio no navegador
                 sireneAlerta.play().then(() => { sireneAlerta.pause(); sireneAlerta.currentTime = 0; });
+                
+                carregarPedidosLocais();
+                await buscarHistoricoNtfy();
                 conectarAoNtfy();
             } else { alert("Senha Incorreta!"); document.getElementById('input-senha-login').value = ""; }
         }
 
-        document.getElementById('input-senha-login').addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
-        function fecharModais() { document.getElementById('modalConfig').style.display='none'; document.getElementById('overlay').style.display='none'; }
-        
-        function abrirConfig() { 
-            document.getElementById('modalConfig').style.display='block'; 
-            document.getElementById('overlay').style.display='block'; 
-            document.getElementById('cfgTempoGeral').value = configTempos.geral;
-            document.getElementById('cfgTempoAuto').value = configTempos.auto;
-            document.getElementById('cfgSenha').value = configTempos.senha;
-            renderizarCamposConfig(); 
-        }
-
-        function renderizarCamposConfig() {
-            const container = document.getElementById('listaContatosConfig');
-            container.innerHTML = '';
-            configAtendentes.forEach((contato, index) => {
-                container.innerHTML += `<div style="display:flex; gap:5px;"><input type="text" placeholder="Nome" value="${contato.nome}" onchange="configAtendentes[${index}].nome=this.value"><input type="text" placeholder="5511..." value="${contato.numero}" onchange="configAtendentes[${index}].numero=this.value"></div>`;
-            });
-        }
-
-        function adicionarCampoContato() { configAtendentes.push({ nome: "", numero: "" }); renderizarCamposConfig(); }
-        function salvarConfig() { 
-            configTempos.geral = parseInt(document.getElementById('cfgTempoGeral').value);
-            configTempos.auto = parseInt(document.getElementById('cfgTempoAuto').value);
-            configTempos.senha = document.getElementById('cfgSenha').value;
-            localStorage.setItem('vampirao_contatos', JSON.stringify(configAtendentes)); 
-            localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
-            alert("Configurações salvas!"); fecharModais(); 
-        }
-
-        function zerarTudo() {
-            if (confirm("ATENÇÃO: Deseja zerar tudo?")) {
-                totalPedidosGeral = 0; bancoDeDados = [];
-                localStorage.setItem('vampirao_total', 0);
-                localStorage.setItem('vampirao_bd', JSON.stringify([]));
-                document.getElementById('lista').innerHTML = "Aguardando novos pedidos...";
-                fecharModais();
+        function carregarPedidosLocais() {
+            if(bancoDeDados.length > 0) {
+                document.getElementById('lista').innerHTML = "";
+                [...bancoDeDados].reverse().forEach(p => renderizarCard(p, false));
             }
         }
 
-        function marcarComoEnviado(btn) { 
-            btn.classList.remove('btn-automatico'); 
-            btn.classList.add('btn-clicado'); 
-            btn.innerHTML = "✓ DIRECIONADO MANUAL"; 
-            // Para a sirene ao interagir com o pedido
-            sireneAlerta.pause();
-            sireneAlerta.currentTime = 0;
+        async function buscarHistoricoNtfy() {
+            try {
+                const response = await fetch('https://ntfy.sh/central_socorro_vampirao_ios/json?poll=1&since=24h');
+                const texto = await response.text();
+                const linhas = texto.trim().split('\n');
+                linhas.forEach(linha => {
+                    const obj = JSON.parse(linha);
+                    if(obj.message) {
+                        const p = JSON.parse(obj.message);
+                        const jaExiste = bancoDeDados.some(item => item.data_id === obj.id);
+                        if(!jaExiste) {
+                            const dataHora = new Date(obj.time * 1000).toLocaleString('pt-BR');
+                            const novo = { ...p, id: ++totalPedidosGeral, data: dataHora, data_id: obj.id };
+                            bancoDeDados.push(novo);
+                            renderizarCard(novo, false);
+                        }
+                    }
+                });
+                localStorage.setItem('vampirao_bd', JSON.stringify(bancoDeDados));
+                localStorage.setItem('vampirao_total', totalPedidosGeral);
+            } catch(e) { console.log("Erro no histórico"); }
         }
 
-        function exportarRelatorio() {
-            if(bancoDeDados.length === 0) return alert("Banco vazio!");
-            let csv = "ID;Data;Nome;Email;Telefone;Endereco;Veiculo;Ano;Amperagem\n";
-            bancoDeDados.forEach(p => { csv += `${p.id};${p.data};${p.nome};${p.email};${p.tel};${p.end};${p.veic};${p.ano};${p.amp}\n`; });
-            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", `Relatorio_Central.csv`);
-            link.click();
+        function renderizarCard(p, tocarSom = true) {
+            if(tocarSom) {
+                sireneAlerta.pause(); sireneAlerta.currentTime = 0;
+                sireneAlerta.play().catch(e => {});
+            }
+
+            const item = document.createElement('div');
+            item.className = 'card-pedido';
+            item.id = `pedido-${p.id}`;
+            
+            let serv = (p.serv || p.msg || "").toLowerCase();
+            let ehAuto = serv.includes("socorro");
+            let tipo = ehAuto ? "🚨 AUTO SOCORRO" : "🔋 TROCA DE BATERIA";
+            let classe = ehAuto ? "header-servico-destaque auto-socorro" : "header-servico-destaque";
+
+            let msgZap = ehAuto ? 
+                `🚨 AUTO SOCORRO - CENTRAL DO SOCORRO 🚨\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email || 'N/A'}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano || 'N/A'}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA: ${p.data}\n\n📌 TAXA: R$ 60,00 (Até 5km)` :
+                `🔋 PEDIDO DE BATERIA - CENTRAL DO SOCORRO 🔋\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email || 'N/A'}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano || 'N/A'}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA: ${p.data}\n\n📌 Mandar orçamento rápido!`;
+
+            let botoesHtml = ''; let primeiroLink = "";
+            configAtendentes.forEach((c, i) => {
+                if(c.numero) {
+                    let link = `https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}`;
+                    if(i === 0) primeiroLink = link;
+                    botoesHtml += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="${link}" target="_blank">ENVIAR PARA ${c.nome}</a>`;
+                }
+            });
+
+            item.innerHTML = `
+                <div class="${classe}">${tipo}</div>
+                <div class="num-pedido">#${p.id}</div>
+                <div class="timer-container" id="timer-${p.id}">⏳ LIMITE: ${configTempos.geral}:00</div>
+                <div class="info-grid">
+                    <div class="info-item"><b>CLIENTE:</b> ${p.nome}</div>
+                    <div class="info-item"><b>TEL:</b> ${p.tel}</div>
+                    <div class="info-item"><b>E-MAIL:</b> ${p.email || 'Não informado'}</div>
+                    <div class="info-item"><b>VEÍCULO:</b> ${p.veic}</div>
+                    <div class="info-item"><b>ANO:</b> ${p.ano || 'Não informado'}</div>
+                    <div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div>
+                    <div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>
+                </div>
+                <div class="lembrete-bruto">${ehAuto ? '⚠️ COBRAR TAXA DE R$ 60,00 ATÉ 5KM' : '⚠️ MANDAR ORÇAMENTO O MAIS RÁPIDO POSSÍVEL'}</div>
+                <div style="font-size:0.8rem; color:#888; margin-top:10px;">📅 Recebido em: ${p.data}</div>
+                <div class="botoes-direcionar">${botoesHtml}</div>`;
+
+            const lista = document.getElementById('lista');
+            if(lista.innerHTML.includes("Aguardando")) lista.innerHTML = "";
+            lista.prepend(item);
+            iniciarTimer(p.id, document.getElementById(`timer-${p.id}`), item, primeiroLink);
+        }
+
+        function conectarAoNtfy() {
+            const source = new EventSource('https://ntfy.sh/central_socorro_vampirao_ios/sse');
+            source.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if(!data.message) return;
+                const p = JSON.parse(data.message);
+                const jaExiste = bancoDeDados.some(item => item.data_id === data.id);
+                if(jaExiste) return;
+
+                totalPedidosGeral++;
+                const dataHora = new Date().toLocaleString('pt-BR');
+                const novo = { ...p, id: totalPedidosGeral, data: dataHora, data_id: data.id };
+                bancoDeDados.push(novo);
+                localStorage.setItem('vampirao_bd', JSON.stringify(bancoDeDados));
+                localStorage.setItem('vampirao_total', totalPedidosGeral);
+                renderizarCard(novo, true);
+            };
+        }
+
+        function marcarComoEnviado(btn) { 
+            btn.classList.add('btn-clicado'); 
+            btn.innerHTML = "✓ DIRECIONADO MANUAL"; 
+            sireneAlerta.pause(); sireneAlerta.currentTime = 0;
         }
 
         function iniciarTimer(id, elementoTimer, card, linkZap) {
@@ -201,67 +249,49 @@
             }, 1000);
         }
 
-        function conectarAoNtfy() {
-            const source = new EventSource('https://ntfy.sh/central_socorro_vampirao_ios/sse');
-            source.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                if(!data.message) return;
-                const p = JSON.parse(data.message);
-                totalPedidosGeral++;
-                
-                // LÓGICA DA SIRENE: Para se já estiver tocando e começa de novo para o novo pedido
-                sireneAlerta.pause();
-                sireneAlerta.currentTime = 0;
-                sireneAlerta.play().catch(error => console.log("Aguardando interação para tocar som."));
-
-                localStorage.setItem('vampirao_total', totalPedidosGeral);
-                const agora = new Date();
-                const dataFormatada = agora.toLocaleDateString('pt-BR') + " " + agora.toLocaleTimeString('pt-BR');
-                
-                bancoDeDados.push({ id: totalPedidosGeral, data: dataFormatada, nome: p.nome, email: p.email || 'N/A', tel: p.tel, end: p.end, veic: p.veic, ano: p.ano || 'N/A', amp: p.amp });
-                localStorage.setItem('vampirao_bd', JSON.stringify(bancoDeDados));
-
-                const item = document.createElement('div');
-                item.className = 'card-pedido';
-                item.id = `pedido-${totalPedidosGeral}`;
-                
-                let servicoVindo = (p.serv || p.msg || "").toLowerCase();
-                let ehAutoSocorro = servicoVindo.includes("socorro");
-                let tipoServico = ehAutoSocorro ? "🚨 AUTO SOCORRO" : "🔋 PEDIDO DE BATERIA";
-                let classeCabecalho = ehAutoSocorro ? "header-servico-destaque auto-socorro" : "header-servico-destaque";
-
-                let msgZap = "";
-                if(ehAutoSocorro) {
-                    msgZap = `🚨 AUTO SOCORRO - CENTRAL DO SOCORRO 🚨\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email || 'Não informado'}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano || 'Não informado'}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA DO PEDIDO: ${dataFormatada}\n\n📌 LEMBRETE: TAXA: R$ 60,00 (Até 5km)\nOBS: Acima de 5km, taxa de deslocamento +5% do valor.`;
-                } else {
-                    msgZap = `🔋 PEDIDO DE BATERIA - CENTRAL DO SOCORRO 🔋\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email || 'Não informado'}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano || 'Não informado'}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA DO PEDIDO: ${dataFormatada}\n\n📌 LEMBRETE: Mandar orçamento da bateria para o cliente o mais rápido possível.`;
-                }
-
-                let botoesHtml = ''; let primeiroLink = "";
-                configAtendentes.forEach((c, index) => { if(c.numero) { let link = `https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}`; if(index === 0) primeiroLink = link; botoesHtml += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="${link}" target="_blank">ENVIAR PARA ${c.nome}</a>`; } });
-
-                item.innerHTML = `
-                    <div class="${classeCabecalho}">${tipoServico}</div>
-                    <div class="num-pedido">#${totalPedidosGeral}</div>
-                    <div class="timer-container" id="timer-${totalPedidosGeral}">⏳ LIMITE: ${configTempos.geral}:00</div>
-                    <div class="info-grid">
-                        <div class="info-item"><b>CLIENTE:</b> ${p.nome}</div>
-                        <div class="info-item"><b>TEL:</b> ${p.tel}</div>
-                        <div class="info-item"><b>E-MAIL:</b> ${p.email || 'Não informado'}</div>
-                        <div class="info-item"><b>VEÍCULO:</b> ${p.veic}</div>
-                        <div class="info-item"><b>ANO:</b> ${p.ano || 'Não informado'}</div>
-                        <div class="info-item"><b>ENDEREÇO:</b> ${p.end}</div>
-                        <div class="info-item"><b>AMPERAGEM:</b> ${p.amp}</div>
-                    </div>
-                    <div class="lembrete-bruto">${ehAutoSocorro ? '⚠️ COBRAR TAXA DE R$ 60,00 ATÉ 5KM' : '⚠️ MANDAR ORÇAMENTO O MAIS RÁPIDO POSSÍVEL'}</div>
-                    <div style="font-size:0.8rem; color:#888; margin-top:10px;">📅 Recebido em: ${dataFormatada}</div>
-                    <div class="botoes-direcionar">${botoesHtml}</div>`;
-
-                const lista = document.getElementById('lista');
-                if(lista.innerHTML.includes("Aguardando")) lista.innerHTML = "";
-                lista.prepend(item);
-                iniciarTimer(totalPedidosGeral, document.getElementById(`timer-${totalPedidosGeral}`), item, primeiroLink);
-            };
+        document.getElementById('input-senha-login').addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
+        function fecharModais() { document.getElementById('modalConfig').style.display='none'; document.getElementById('overlay').style.display='none'; }
+        function abrirConfig() { 
+            document.getElementById('modalConfig').style.display='block'; document.getElementById('overlay').style.display='block'; 
+            document.getElementById('cfgTempoGeral').value = configTempos.geral;
+            document.getElementById('cfgTempoAuto').value = configTempos.auto;
+            document.getElementById('cfgSenha').value = configTempos.senha;
+            renderizarCamposConfig(); 
+        }
+        function renderizarCamposConfig() {
+            const container = document.getElementById('listaContatosConfig');
+            container.innerHTML = '';
+            configAtendentes.forEach((contato, index) => {
+                container.innerHTML += `<div style="display:flex; gap:5px;"><input type="text" placeholder="Nome" value="${contato.nome}" onchange="configAtendentes[${index}].nome=this.value"><input type="text" placeholder="5511..." value="${contato.numero}" onchange="configAtendentes[${index}].numero=this.value"></div>`;
+            });
+        }
+        function adicionarCampoContato() { configAtendentes.push({ nome: "", numero: "" }); renderizarCamposConfig(); }
+        function salvarConfig() { 
+            configTempos.geral = parseInt(document.getElementById('cfgTempoGeral').value);
+            configTempos.auto = parseInt(document.getElementById('cfgTempoAuto').value);
+            configTempos.senha = document.getElementById('cfgSenha').value;
+            localStorage.setItem('vampirao_contatos', JSON.stringify(configAtendentes)); 
+            localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
+            alert("Configurações salvas!"); fecharModais(); 
+        }
+        function zerarTudo() {
+            if (confirm("ATENÇÃO: Deseja zerar tudo?")) {
+                totalPedidosGeral = 0; bancoDeDados = [];
+                localStorage.setItem('vampirao_total', 0);
+                localStorage.setItem('vampirao_bd', JSON.stringify([]));
+                document.getElementById('lista').innerHTML = "Aguardando novos pedidos...";
+                fecharModais();
+            }
+        }
+        function exportarRelatorio() {
+            if(bancoDeDados.length === 0) return alert("Banco vazio!");
+            let csv = "ID;Data;Nome;Telefone;Endereco;Veiculo;Ano;Amperagem\n";
+            bancoDeDados.forEach(p => { csv += `${p.id};${p.data};${p.nome};${p.tel};${p.end};${p.veic};${p.ano};${p.amp}\n`; });
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `Relatorio_Central.csv`);
+            link.click();
         }
     </script>
 </body>
