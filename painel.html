@@ -60,10 +60,15 @@
 
         .btn-reset { background: var(--vermelho) !important; margin-top: 10px; border-radius: 8px; font-weight: bold; color: #fff; padding: 12px; width: 100%; border: none; cursor: pointer; }
 
+        /* ESTILO DO RELATÓRIO NA PÁGINA */
         #sessao-relatorio { display: none; background: #000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1500; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        .tabela-relatorio { width: 100%; border-collapse: collapse; background: var(--cinza); margin-top: 20px; font-size: 0.8rem; }
-        .tabela-relatorio th { background: var(--amarelo); color: #000; padding: 10px; text-align: left; }
-        .tabela-relatorio td { border-bottom: 1px solid #333; padding: 10px; color: #fff; }
+        .tabela-relatorio { width: 100%; border-collapse: collapse; background: var(--cinza); margin-top: 10px; font-size: 0.75rem; }
+        .tabela-relatorio th { background: var(--amarelo); color: #000; padding: 8px; text-align: left; position: sticky; top: 0; }
+        .tabela-relatorio td { border-bottom: 1px solid #333; padding: 8px; color: #fff; }
+        .footer-relatorio { background: var(--amarelo); color: #000; padding: 15px; border-radius: 0 0 10px 10px; display: flex; justify-content: space-between; font-weight: bold; font-size: 1rem; }
+        .filtros-busca { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #222; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--azul); }
+        .filtros-busca input { margin-bottom: 0; font-size: 0.8rem; padding: 8px; }
+        .resumo-vendas { background: #111; padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 5px solid var(--verde); font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -73,39 +78,52 @@
             <h2 style="color:var(--amarelo); margin:0;">🔒 ACESSO ADM</h2>
             <input type="password" id="input-senha-login" placeholder="Senha de Acesso">
             <button class="btn-entrar" onclick="fazerLogin()">ENTRAR</button>
-            <div id="status-sync" style="font-size:0.7rem; color:#666; margin-top:10px;">Sincronizando senha...</div>
+            <div id="status-sync" style="font-size:0.7rem; color:#666; margin-top:10px;">Sincronizando segurança...</div>
         </div>
     </div>
 
     <div id="sessao-relatorio">
         <div class="header-painel">
-            <h1>📊 RELATÓRIO DE CHAMADOS</h1>
-            <button class="btn-acao" onclick="fecharRelatorio()">✖ FECHAR</button>
+            <h1>📊 RELATÓRIO DE FECHAMENTO</h1>
+            <button class="btn-acao" onclick="fecharRelatorio()">✖ VOLTAR AO PAINEL</button>
         </div>
-        <div style="background:var(--cinza); padding:15px; border-radius:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <span>Filtrar:</span>
-            <select id="filtro-tempo" style="width:auto; margin:0;" onchange="gerarRelatorioInterno()">
-                <option value="hoje">Hoje</option>
-                <option value="semana">Esta Semana</option>
-                <option value="mes">Este Mês</option>
-                <option value="ano">Este Ano</option>
-                <option value="tudo">Tudo</option>
-            </select>
-            <button class="btn-acao btn-reset" style="width:auto; margin:0;" onclick="zerarTudo()">🚨 APAGAR TUDO</button>
+        
+        <div class="filtros-busca">
+            <div><span class="label-config">Período:</span>
+                <select id="filtro-tempo" onchange="gerarRelatorioInterno()">
+                    <option value="hoje">Hoje</option>
+                    <option value="semana">Esta Semana</option>
+                    <option value="mes">Este Mês</option>
+                    <option value="ano">Este Ano</option>
+                    <option value="tudo">Histórico Total</option>
+                </select>
+            </div>
+            <div><span class="label-config">Filtrar DDD/Tel:</span><input type="text" id="busca-tel" placeholder="Ex: 11..." oninput="gerarRelatorioInterno()"></div>
+            <div><span class="label-config">Filtrar Veículo:</span><input type="text" id="busca-veic" placeholder="Ex: Titan..." oninput="gerarRelatorioInterno()"></div>
+            <div><span class="label-config">Filtrar Região:</span><input type="text" id="busca-end" placeholder="Ex: Vicente de Paulo..." oninput="gerarRelatorioInterno()"></div>
+            <div><span class="label-config">Filtrar Amperagem:</span><input type="text" id="busca-amp" placeholder="Ex: 60Ah..." oninput="gerarRelatorioInterno()"></div>
         </div>
+
+        <div class="resumo-vendas" id="resumo-vendas">
+            </div>
+
         <table class="tabela-relatorio">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Data</th>
-                    <th>Cliente/Tel</th>
-                    <th>Veículo/Ano</th>
-                    <th>Endereço</th>
+                    <th>Cliente</th>
+                    <th>Telefone</th>
+                    <th>Veículo</th>
+                    <th>Região/Endereço</th>
                     <th>Amperagem</th>
                 </tr>
             </thead>
             <tbody id="corpo-relatorio"></tbody>
         </table>
+        <div class="footer-relatorio" id="footer-relatorio">
+            TOTAL DE ATENDIMENTOS NO PERÍODO: 0
+        </div>
     </div>
 
     <div id="painel-conteudo">
@@ -176,25 +194,54 @@
 
         function abrirRelatorio() { document.getElementById('sessao-relatorio').style.display = 'block'; gerarRelatorioInterno(); }
         function fecharRelatorio() { document.getElementById('sessao-relatorio').style.display = 'none'; }
+
+        // --- SISTEMA DE RELATÓRIO COM CÁLCULO E FILTRO (O QUE VOCÊ PEDIU) ---
         function gerarRelatorioInterno() {
             const filtro = document.getElementById('filtro-tempo').value;
+            const bTel = document.getElementById('busca-tel').value.toLowerCase();
+            const bVeic = document.getElementById('busca-veic').value.toLowerCase();
+            const bEnd = document.getElementById('busca-end').value.toLowerCase();
+            const bAmp = document.getElementById('busca-amp').value.toLowerCase();
+            
             const corpo = document.getElementById('corpo-relatorio');
             corpo.innerHTML = "";
             const agora = new Date();
+            let contadorFinal = 0;
+
+            let contagemVeic = {};
+            let contagemAmp = {};
 
             bancoDeDados.forEach(p => {
                 const dataP = new Date(p.timestamp || Date.now());
-                let mostrar = false;
-                if(filtro === "hoje" && dataP.toDateString() === agora.toDateString()) mostrar = true;
-                else if(filtro === "semana" && (agora - dataP) < 7*24*60*60*1000) mostrar = true;
-                else if(filtro === "mes" && dataP.getMonth() === agora.getMonth()) mostrar = true;
-                else if(filtro === "ano" && dataP.getFullYear() === agora.getFullYear()) mostrar = true;
-                else if(filtro === "tudo") mostrar = true;
+                let mostrarTempo = false;
+                if(filtro === "hoje" && dataP.toDateString() === agora.toDateString()) mostrarTempo = true;
+                else if(filtro === "semana" && (agora - dataP) < 7*24*60*60*1000) mostrarTempo = true;
+                else if(filtro === "mes" && dataP.getMonth() === agora.getMonth()) mostrarTempo = true;
+                else if(filtro === "ano" && dataP.getFullYear() === agora.getFullYear()) mostrarTempo = true;
+                else if(filtro === "tudo") mostrarTempo = true;
 
-                if(mostrar) {
-                    corpo.innerHTML += `<tr><td>#${p.id}</td><td>${p.data}</td><td>${p.nome}<br>${p.tel}</td><td>${p.veic}<br>${p.ano}</td><td>${p.end}</td><td>${p.amp}</td></tr>`;
+                let mostrarBusca = p.tel.toLowerCase().includes(bTel) && 
+                                   p.veic.toLowerCase().includes(bVeic) && 
+                                   p.end.toLowerCase().includes(bEnd) && 
+                                   p.amp.toLowerCase().includes(bAmp);
+
+                if(mostrarTempo && mostrarBusca) {
+                    contadorFinal++;
+                    corpo.innerHTML += `<tr><td>#${p.id}</td><td>${p.data}</td><td>${p.nome}</td><td>${p.tel}</td><td>${p.veic}</td><td>${p.end}</td><td>${p.amp}</td></tr>`;
+                    
+                    // Lógica para estatística
+                    contagemVeic[p.veic] = (contagemVeic[p.veic] || 0) + 1;
+                    contagemAmp[p.amp] = (contagemAmp[p.amp] || 0) + 1;
                 }
             });
+
+            document.getElementById('footer-relatorio').innerText = `TOTAL DE ATENDIMENTOS NO PERÍODO: ${contadorFinal}`;
+            
+            // Qual mais vendeu?
+            let topVeic = Object.keys(contagemVeic).reduce((a, b) => contagemVeic[a] > contagemVeic[b] ? a : b, "Nenhum");
+            let topAmp = Object.keys(contagemAmp).reduce((a, b) => contagemAmp[a] > contagemAmp[b] ? a : b, "Nenhuma");
+
+            document.getElementById('resumo-vendas').innerHTML = `<b>📊 RESUMO DO FILTRO:</b> Veículo mais atendido: <span style="color:var(--amarelo)">${topVeic}</span> | Amperagem mais pedida: <span style="color:var(--amarelo)">${topAmp}</span>`;
         }
 
         async function buscarHistoricoNtfy() {
@@ -226,32 +273,7 @@
             let serv = (p.serv || p.msg || "").toLowerCase();
             let ehAuto = serv.includes("socorro");
             
-            // --- MENSAGEM WHATSAPP FORMATADA CONFORME EXEMPLO ---
-            let msgZap = "";
-            if(ehAuto) {
-                msgZap = `🚨 AUTO SOCORRO - CENTRAL DO SOCORRO 🚨\n\n` +
-                         `👤 CLIENTE: ${p.nome}\n` +
-                         `📧 E-MAIL: ${p.email || 'Não informado'}\n` +
-                         `📞 CONTATO: ${p.tel}\n` +
-                         `📍 ENDEREÇO: ${p.end}\n` +
-                         `🚗 VEÍCULO: ${p.veic}\n` +
-                         `📅 ANO: ${p.ano || 'Não informado'}\n` +
-                         `⚡ AMPERAGEM: ${p.amp}\n\n` +
-                         `🕒 HORA DO PEDIDO: ${p.data}\n\n` +
-                         `📌 LEMBRETE: TAXA: R$ 60,00 (Até 5km)\n` +
-                         `OBS: Acima de 5km, taxa de deslocamento +5% do valor.`;
-            } else {
-                msgZap = `🔋 PEDIDO DE BATERIA - CENTRAL DO SOCORRO 🔋\n\n` +
-                         `👤 CLIENTE: ${p.nome}\n` +
-                         `📧 E-MAIL: ${p.email || 'Não informado'}\n` +
-                         `📞 CONTATO: ${p.tel}\n` +
-                         `📍 ENDEREÇO: ${p.end}\n` +
-                         `🚗 VEÍCULO: ${p.veic}\n` +
-                         `📅 ANO: ${p.ano || 'Não informado'}\n` +
-                         `⚡ AMPERAGEM: ${p.amp}\n\n` +
-                         `🕒 HORA DO PEDIDO: ${p.data}\n\n` +
-                         `📌 LEMBRETE: Mandar orçamento da bateria para o cliente o mais rápido possível.`;
-            }
+            let msgZap = ehAuto ? `🚨 AUTO SOCORRO - CENTRAL DO SOCORRO 🚨\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email || 'Não informado'}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano || 'Não informado'}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA DO PEDIDO: ${p.data}\n\n📌 LEMBRETE: TAXA: R$ 60,00 (Até 5km)\nOBS: Acima de 5km, taxa de deslocamento +5% do valor.` : `🔋 PEDIDO DE BATERIA - CENTRAL DO SOCORRO 🔋\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email || 'Não informado'}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano || 'Não informado'}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA DO PEDIDO: ${p.data}\n\n📌 LEMBRETE: Mandar orçamento da bateria para o cliente o mais rápido possível.`;
 
             let bots = ''; let pLink = "";
             configAtendentes.forEach((c, i) => { if(c.numero){ let l = `https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}`; if(i==0)pLink=l; bots += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="${l}" target="_blank">ENVIAR PARA ${c.nome}</a>`; } });
@@ -340,7 +362,7 @@
             localStorage.setItem('vampirao_tempos', JSON.stringify(configTempos));
             alert("Salvo e Sincronizado!"); fecharModais(); 
         }
-        function zerarTudo() { if (confirm("ZERAR TUDO?")) { localStorage.clear(); location.reload(); } }
+        function zerarTudo() { if (confirm("ZERAR TUDO? Isso apagará o banco de dados de relatórios também!")) { localStorage.clear(); location.reload(); } }
         function fecharModais() { document.getElementById('modalConfig').style.display='none'; document.getElementById('overlay').style.display='none'; }
         document.getElementById('input-senha-login').addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
     </script>
