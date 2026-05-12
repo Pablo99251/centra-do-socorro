@@ -60,7 +60,6 @@
 
         .btn-reset { background: var(--vermelho) !important; margin-top: 10px; border-radius: 8px; font-weight: bold; color: #fff; padding: 12px; width: 100%; border: none; cursor: pointer; }
 
-        /* ESTILO DO RELATÓRIO NA PÁGINA - SEM MUDAR O RESTO */
         #sessao-relatorio { display: none; background: #000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1500; overflow-y: auto; padding: 20px; box-sizing: border-box; }
         .tabela-relatorio { width: 100%; border-collapse: collapse; background: var(--cinza); margin-top: 20px; font-size: 0.8rem; }
         .tabela-relatorio th { background: var(--amarelo); color: #000; padding: 10px; text-align: left; }
@@ -149,7 +148,6 @@
         let totalPedidosGeral = JSON.parse(localStorage.getItem('vampirao_total')) || 0;
         let bancoDeDados = JSON.parse(localStorage.getItem('vampirao_bd')) || [];
 
-        // BUSCA SENHA NA NUVEM
         async function sincronizarSenha() {
             try {
                 const res = await fetch('https://ntfy.sh/central_vampirao_seguranca/json?poll=1&since=24h');
@@ -176,7 +174,6 @@
             } else { alert("Senha Incorreta!"); document.getElementById('input-senha-login').value = ""; }
         }
 
-        // RELATÓRIO INTERNO
         function abrirRelatorio() { document.getElementById('sessao-relatorio').style.display = 'block'; gerarRelatorioInterno(); }
         function fecharRelatorio() { document.getElementById('sessao-relatorio').style.display = 'none'; }
         function gerarRelatorioInterno() {
@@ -200,7 +197,6 @@
             });
         }
 
-        // CARREGA HISTÓRICO PARA OUTROS PCs
         async function buscarHistoricoNtfy() {
             try {
                 const res = await fetch('https://ntfy.sh/central_socorro_vampirao_ios/json?poll=1&since=24h');
@@ -212,7 +208,7 @@
                         const p = JSON.parse(obj.message);
                         if(!bancoDeDados.some(i => i.data_id === obj.id)) {
                             totalPedidosGeral++;
-                            const novo = { ...p, id: totalPedidosGeral, data: new Date(obj.time*1000).toLocaleString(), data_id: obj.id, timestamp: obj.time*1000 };
+                            const novo = { ...p, id: totalPedidosGeral, data: new Date(obj.time*1000).toLocaleString('pt-BR'), data_id: obj.id, timestamp: obj.time*1000 };
                             bancoDeDados.push(novo);
                             renderizarCard(novo, false);
                         }
@@ -229,7 +225,34 @@
             item.id = `pedido-${p.id}`;
             let serv = (p.serv || p.msg || "").toLowerCase();
             let ehAuto = serv.includes("socorro");
-            let msgZap = ehAuto ? `🚨 AUTO SOCORRO - CENTRAL DO SOCORRO 🚨\n\n👤 CLIENTE: ${p.nome}\n📧 E-MAIL: ${p.email}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA: ${p.data}\n\n📌 TAXA: R$ 60,00 (5km)` : `🔋 BATERIA - CENTRAL DO SOCORRO 🔋\n\n👤 CLIENTE: ${p.nome}\n📞 CONTATO: ${p.tel}\n📍 ENDEREÇO: ${p.end}\n🚗 VEÍCULO: ${p.veic}\n📅 ANO: ${p.ano}\n⚡ AMPERAGEM: ${p.amp}\n\n🕒 HORA: ${p.data}\n\n📌 Mandar orçamento rápido!`;
+            
+            // --- MENSAGEM WHATSAPP FORMATADA CONFORME EXEMPLO ---
+            let msgZap = "";
+            if(ehAuto) {
+                msgZap = `🚨 AUTO SOCORRO - CENTRAL DO SOCORRO 🚨\n\n` +
+                         `👤 CLIENTE: ${p.nome}\n` +
+                         `📧 E-MAIL: ${p.email || 'Não informado'}\n` +
+                         `📞 CONTATO: ${p.tel}\n` +
+                         `📍 ENDEREÇO: ${p.end}\n` +
+                         `🚗 VEÍCULO: ${p.veic}\n` +
+                         `📅 ANO: ${p.ano || 'Não informado'}\n` +
+                         `⚡ AMPERAGEM: ${p.amp}\n\n` +
+                         `🕒 HORA DO PEDIDO: ${p.data}\n\n` +
+                         `📌 LEMBRETE: TAXA: R$ 60,00 (Até 5km)\n` +
+                         `OBS: Acima de 5km, taxa de deslocamento +5% do valor.`;
+            } else {
+                msgZap = `🔋 PEDIDO DE BATERIA - CENTRAL DO SOCORRO 🔋\n\n` +
+                         `👤 CLIENTE: ${p.nome}\n` +
+                         `📧 E-MAIL: ${p.email || 'Não informado'}\n` +
+                         `📞 CONTATO: ${p.tel}\n` +
+                         `📍 ENDEREÇO: ${p.end}\n` +
+                         `🚗 VEÍCULO: ${p.veic}\n` +
+                         `📅 ANO: ${p.ano || 'Não informado'}\n` +
+                         `⚡ AMPERAGEM: ${p.amp}\n\n` +
+                         `🕒 HORA DO PEDIDO: ${p.data}\n\n` +
+                         `📌 LEMBRETE: Mandar orçamento da bateria para o cliente o mais rápido possível.`;
+            }
+
             let bots = ''; let pLink = "";
             configAtendentes.forEach((c, i) => { if(c.numero){ let l = `https://wa.me/${c.numero}?text=${encodeURIComponent(msgZap)}`; if(i==0)pLink=l; bots += `<a class="btn-zap" onclick="marcarComoEnviado(this)" href="${l}" target="_blank">ENVIAR PARA ${c.nome}</a>`; } });
             
